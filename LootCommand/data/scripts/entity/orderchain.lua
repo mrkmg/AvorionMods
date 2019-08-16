@@ -35,19 +35,15 @@ callable(OrderChain, "startLooting")
 
 function OrderChain.lootOrderFinished(order)
     local persistent = order.persistent
-    
     local entity = Entity()
     if not entity:hasScript("data/scripts/entity/ai/loot.lua") then
---        print("missing salvage script")
         return true
     end
 
     if persistent then return false end
 
-    local loots = {Sector():getEntitiesByType(EntityType.Loot)}
-    if loots ~= nil and #loots > 0 then
-        return false
-    end
+    local ret, result = entity:invokeFunction("data/scripts/entity/ai/loot.lua", "canContinueLooting")
+    if ret == 0 and result == true then return false end
 
     entity:removeScript("data/scripts/entity/ai/loot.lua")
     return true

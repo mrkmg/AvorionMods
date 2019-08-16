@@ -15,6 +15,7 @@ local stuckLoot = {}
 local targetLoot = nil
 local collectAttemptCounter = 0
 local noLootLeftTimer = 0
+local wasInited = false
 
 function AILoot.getUpdateInterval()
     if noLootLeft or noCargoSpace then return 15 end
@@ -33,10 +34,19 @@ function AILoot.updateServer(timeStep)
 
     AILoot.updateLooting(timeStep)
 
+    wasInited = true
+
     if noLootLeft == true then
         noLootLeftTimer = noLootLeftTimer - timeStep
     end
 
+end
+
+function AILoot.canContinueLooting()
+    -- prevent terminating script before it even started
+    if not wasInited then return true end
+
+    return not noLootLeft or not noCargoSpace
 end
 
 function AILoot.updateLooting(timeStep)

@@ -5,6 +5,7 @@ CraftOrders.registerModdedCraftOrder("LootOrder", {
     callback = "onUserLootOrder"
 })
 
+
 function CraftOrders.onUserLootOrder()
     if onClient() then
         invokeServerFunction("onUserLootOrder")
@@ -19,13 +20,13 @@ callable(CraftOrders, "onUserLootOrder")
 
 if onServer() then
 
-function CraftOrders.loot()
-    if checkCaptain() then
-        CraftOrders.removeSpecialOrders()
-        Entity():addScriptOnce("ai/loot.lua")
-        return true
+    function CraftOrders.loot()
+        if checkCaptain() then
+            CraftOrders.removeSpecialOrders()
+            Entity():addScriptOnce("ai/loot.lua")
+            return true
+        end
     end
-end
-callable(CraftOrders, "loot")
+    callable(CraftOrders, "loot")
 
 end
