@@ -2,9 +2,9 @@
 
 local moddedCraftOrders = {}
 
-function CraftOrders.registerModdedCraftOrder(name, orderDetails)
-    if moddedCraftOrders[name] ~= nil then
-        moddedCraftOrders[name] = orderDetails
+function CraftOrders.registerModdedCraftOrder(id, orderDetails)
+    if moddedCraftOrders[id] ~= nil then
+        moddedCraftOrders[id] = orderDetails
     end
 end
 

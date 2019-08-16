@@ -2,14 +2,22 @@
 
 local moddedOrderChains = {};
 
-function OrderChain.registerModdedOrderChain(name, orderChainDef)
+function OrderChain.registerModdedOrderChain(id, orderChainDef)
     if moddedOrderChains[name] ~= nil then
         moddedOrderChains[name] = orderChainDef
     end
 end
 
-function OrderChain.canEnchainAfter(name)
-    return not moddedOrderChains[name] ~= nil or moddedOrderChains[name].canEnchainAfter
+function OrderChain.canEnchainAfter(id, order)
+    if moddedOrderChains[id] == nil then
+        return true
+    end
+
+    if moddedOrderChains[id].canEnchainAfter == nil then
+        return true
+    end
+
+    return OrderChain[moddedOrderChains[id].canEnchainAfterCheck](order)
 end
 
 function OrderChain.canEnchain(order)
@@ -37,7 +45,7 @@ function OrderChain.canEnchain(order)
     elseif last.action == OrderType.Salvage and last.persistent then
         OrderChain.sendError("Can't enchain anything after a persistent salvage order."%_T)
         return false
-    elseif not OrderChain.canEnchainAfter(last.action) then
+    elseif not OrderChain.canEnchainAfter(last.action, last) then
     	OrderChain.sendError("Can enchain anything after a ${name} order"%_T {name = last.action})
     	return false
     end
@@ -162,34 +170,4 @@ function OrderChain.updateServer(timeStep)
 
         OrderChain.updateShipOrderInfo()
     end
-end
-
-function OrderChain.getOrderInfo()
-    local x, y = Sector():getCoordinates()
-
-    local info = {}
-    info.chain = {}
-    info.currentIndex = OrderChain.activeOrder
-    info.coordinates = {x=x, y=y}
-
-    for _, action in pairs(OrderChain.chain) do
-        local newEntry = {}
-        for key, value in pairs(action) do
-            newEntry[key] = value
-        end
-
-        if OrderTypes[action.action] ~= nil then
-            newEntry.name = OrderTypes[action.action].name
-            newEntry.icon = OrderTypes[action.action].icon
-            newEntry.pixelIcon = OrderTypes[action.action].pixelIcon
-        elseif moddedOrderChains[action.action] ~= nil then
-            newEntry.name = moddedOrderChains[action.action].displayName
-            newEntry.icon = moddedOrderChains[action.action].icon
-            newEntry.pixelIcon = moddedOrderChains[action.action].pixelIcon
-        end
-
-        table.insert(info.chain, newEntry)
-    end
-
-    return info
 end

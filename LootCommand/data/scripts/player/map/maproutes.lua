@@ -1,6 +1,6 @@
 -- LootCommand - by Kevin Gravier (MrKMG)
 
-MapRoutes.registerModdedMapRoute("LootOrder", {
+MapRoutes.registerModdedMapRoute(OrderTypes.Loot, {
     orderDescriptionFunction = "lootDescription",
     pixelIcon = "data/textures/icons/pixel/loot.png",
 });

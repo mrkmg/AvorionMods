@@ -1,12 +1,10 @@
 -- LootCommand - by Kevin Gravier (MrKMG)
 
-OrderChain.registerModdedOrderChain("LootOrder", {
+OrderChain.registerModdedOrderChain(OrderTypes.Loot, {
     isFinishedFunction = "lootOrderFinished",
     canEnchainAfter = true,
     onActivateFunction = "startLooting",
-    displayName = "Loot"%_T,
-    icon = "data/textures/icons/loot.png",
-    pixelIcon = "data/textures/icons/pixel/loot.png",
+    canEnchainAfterCheck = "canEnchainAfterLooting",
 });
 
 function OrderChain.addLootOrder(persistent)
@@ -18,6 +16,10 @@ function OrderChain.addLootOrder(persistent)
     if callingPlayer then
         local owner, _, player = checkEntityInteractionPermissions(Entity(), AlliancePrivilege.ManageShips)
         if not owner then return end
+    end
+
+    if persistent == nil then
+        persistent = false
     end
 
     local order = {action = "LootOrder", persistent = persistent}
@@ -50,3 +52,6 @@ function OrderChain.lootOrderFinished(order)
 end
 callable(OrderChain, "lootOrderFinished")
 
+function OrderChain.canEnchainAfterLooting(order)
+    return not order.persistent
+end

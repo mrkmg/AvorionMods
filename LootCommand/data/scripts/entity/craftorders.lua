@@ -1,10 +1,9 @@
 -- LootCommand - by Kevin Gravier (MrKMG)
 
-CraftOrders.registerModdedCraftOrder("LootOrder", {
+CraftOrders.registerModdedCraftOrder(OrderTypes.Loot, {
     title = "Loot",
     callback = "onUserLootOrder"
 })
-
 
 function CraftOrders.onUserLootOrder()
     if onClient() then

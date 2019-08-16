@@ -2,9 +2,9 @@
 
 local moddedMapRoutes = {}
 
-function MapRoutes.registerModdedMapRoute(name, maprouteDef)
-    if moddedMapRoutes[name] ~= nil then
-        moddedMapRoutes[name] = maprouteDef
+function MapRoutes.registerModdedMapRoute(id, maprouteDef)
+    if moddedMapRoutes[id] ~= nil then
+        moddedMapRoutes[id] = maprouteDef
     end
 end
 
