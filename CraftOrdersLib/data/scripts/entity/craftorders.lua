@@ -8,10 +8,6 @@ function CraftOrders.registerModdedCraftOrder(id, orderDetails)
     end
 end
 
-CraftOrders.registerModdedCraftOrder(20, {title = "Modded Order 1"%_T, callback = ""})
-CraftOrders.registerModdedCraftOrder(21, {title = "Modded Order 2"%_T, callback = ""})
-CraftOrders.registerModdedCraftOrder(22, {title = "Modded Order 3"%_T, callback = ""})
-
 function CraftOrders.initUI()    
     local numModdedCraftOrders = 0
     for _,_ in pairs(moddedCraftOrders) do
