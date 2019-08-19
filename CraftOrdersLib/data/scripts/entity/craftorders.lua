@@ -40,7 +40,6 @@ function CraftOrders.initUI()
     local index = 9
 
     for _, craftOrder in pairs(moddedCraftOrders) do
-        print ("Adding " .. craftOrder.title .. " to UI")
     	window:createButton(splitter:partition(index), craftOrder.title, craftOrder.callback)
     	index = index + 1
 	end
@@ -53,7 +52,6 @@ function CraftOrders.removeSpecialOrders()
         --Fix for path issues on windows
         local fixedName = string.gsub(name, "\\", "/")
         if string.match(fixedName, "data/scripts/entity/ai/") then
-            print ("Removing " .. name)
             entity:removeScript(index)
         end
     end
