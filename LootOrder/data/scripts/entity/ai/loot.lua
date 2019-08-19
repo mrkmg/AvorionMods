@@ -10,14 +10,6 @@ include ("utility")
 -- namespace AILoot
 AILoot = {}
 
-local noLootLeft = false
-local noCargoSpace = false
-local stuckLoot = {}
-local targetLoot = nil
-local collectAttemptCounter = 0
-local noLootLeftTimer = 0
-local wasInited = false
-
 local LootLevels = {
     None = 0,
     Low = 1,
@@ -25,20 +17,50 @@ local LootLevels = {
     High = 3,
 }
 
+local LootComponentLevels = {}
+LootComponentLevels[ComponentType.SystemUpgradeLoot] = LootLevels.High
+LootComponentLevels[ComponentType.TurretLoot] = LootLevels.High
+LootComponentLevels[ComponentType.MoneyLoot] = LootLevels.Medium
+LootComponentLevels[ComponentType.ColorLoot] = LootLevels.Medium
+LootComponentLevels[ComponentType.CargoLoot] = LootLevels.Low
+LootComponentLevels[ComponentType.ResourceLoot] = LootLevels.Low
+LootComponentLevels[ComponentType.CrewLoot] = LootLevels.Low
+
+local LootComponentNames = {}
+LootComponentLevels[ComponentType.SystemUpgradeLoot] = "System"
+LootComponentLevels[ComponentType.TurretLoot] = "Turret"
+LootComponentLevels[ComponentType.MoneyLoot] = "Credits"
+LootComponentLevels[ComponentType.ColorLoot] = "Color"
+LootComponentLevels[ComponentType.CargoLoot] = "Cargo"
+LootComponentLevels[ComponentType.ResourceLoot] = "Resource"
+LootComponentLevels[ComponentType.CrewLoot] = "Crew"
+
+local LootComponentNeedsCargo = {}
+LootComponentLevels[ComponentType.SystemUpgradeLoot] = false
+LootComponentLevels[ComponentType.TurretLoot] = false
+LootComponentLevels[ComponentType.MoneyLoot] = false
+LootComponentLevels[ComponentType.ColorLoot] = false
+LootComponentLevels[ComponentType.CargoLoot] = true
+LootComponentLevels[ComponentType.ResourceLoot] = true
+LootComponentLevels[ComponentType.CrewLoot] = false
+
+local isLootLeft = false
+local hasCargoSpace = false
+local stuckLoot = {}
+local targetLoot = nil
+local collectAttemptCounter = 0
+local noLootLeftTimer = 0
+local wasInited = false
+
 if onServer() then
 
 function AILoot.getUpdateInterval()
-    if noLootLeft or noCargoSpace then return 15 end
+    if not isLootLeft then return 15 end
     return 1
 end
 
 
 function AILoot.updateServer(timeStep)
-    if onClient() then 
-        print ("updateServer on client")
-        terminate() 
-    end
-
     local ship = Entity()
 
     if ship.hasPilot or ((ship.playerOwned or ship.allianceOwned) and ship:getCrewMembers(CrewProfessionType.Captain) == 0) then
@@ -51,7 +73,7 @@ function AILoot.updateServer(timeStep)
 
     wasInited = true
 
-    if noLootLeft == true then
+    if not isLootLeft then
         noLootLeftTimer = noLootLeftTimer - timeStep
     end
 
@@ -61,36 +83,17 @@ function AILoot.canContinueLooting()
     -- prevent terminating script before it even started
     if not wasInited then return true end
 
-    return not noLootLeft and not noCargoSpace
+    return isLootLeft
 end
 
 function AILoot.updateLooting(timeStep)
 	local ship = Entity()
-    noLootLeft = false
+    isLootLeft = true
 
-	if (ship.freeCargoSpace < 1 and not noCargoSpace) then
-		noCargoSpace = true
-
-        local faction = Faction(ship.factionIndex)
-        local x, y = Sector():getCoordinates()
-        local coords = tostring(x) .. ":" .. tostring(y)
-        if faction then faction:sendChatMessage(ship.name or "", ChatMessageType.Error, "Your ship's cargo bay in sector %s is full."%_T, coords) end
-
-        ShipAI():setPassive()
-
-        local ores, totalOres = getOreAmountsOnShip(ship)
-        local scraps, totalScraps = getScrapAmountsOnShip(ship)
-        if totalOres + totalScraps == 0 then
-            ShipAI():setStatus("Looting - No Cargo Space"%_T, {})
-            if faction then faction:sendChatMessage(ship.name or "", ChatMessageType.Normal, "Sir, we can't loot in \\s(%s), we have no space in our cargo bay!"%_T, coords) end
-            noCargoSpace = true
-        else
-            if faction then faction:sendChatMessage(ship.name or "", ChatMessageType.Normal, "Sir, we can't continue loot in \\s(%s), we have no more space left in our cargo bay!"%_T, coords) end
-            terminate()
-        end
-		return
+	if (ship.freeCargoSpace < 1 and hasCargoSpace) then
+		hasCargoSpace = false
     else
-        noCargoSpace = false
+        hasCargoSpace = true
 	end
 
 	if not valid(targetLoot) then
@@ -112,22 +115,22 @@ function AILoot.updateLooting(timeStep)
     end
 
     if valid(targetLoot) then
-        local lootName = AILoot.getLootsName(targetLoot);
+        local lootName = AILoot.getLootName(AILoot.getLootType(targetLoot));
 
         ai:setStatus("Looting ${name} /* ship AI status*/"%_T%{name = lootName}, {})
         ai:setFly(targetLoot.translationf, 0)
     else
         ai:setStatus("Looting - No Loot Left /* ship AI status*/"%_T, {})
-        if noLootLeft == false or noLootLeftTimer <= 0 then
-            noLootLeft = true
+        if isLootLeft or noLootLeftTimer <= 0 then
+            isLootLeft = false
             noLootLeftTimer = 10 * 60 -- ten minutes
 
             local faction = Faction(Entity().factionIndex)
             if faction then
                 local x, y = Sector():getCoordinates()
                 local coords = tostring(x) .. ":" .. tostring(y)
-                faction:sendChatMessage(ship.name or "", ChatMessageType.Error, "Your ship in sector %s can't find any more loot."%_T, coords)
-                faction:sendChatMessage(ship.name or "", ChatMessageType.Normal, "Sir, we can't find any more loot in \\s(%s)!"%_T, coords)
+                faction:sendChatMessage(ship.name or "", ChatMessageType.Error, "Your ship in sector %s can't find any more collectable loot."%_T, coords)
+                faction:sendChatMessage(ship.name or "", ChatMessageType.Normal, "Sir, we can't find any more collectable loot in \\s(%s)!"%_T, coords)
             end
         end
     end
@@ -139,6 +142,7 @@ function AILoot.findLoot()
     local isBetterLoot = false
     local isEqualLoot = false
     local isCloserLoot = false
+    local fitsOnShip = false
 
     local currentBestDistance = nil
     local currentBestLootLevel = LootLevels.None
@@ -146,18 +150,24 @@ function AILoot.findLoot()
     local currentLootLevel = nil
     local currentLootDistance
 
+    local currentLootNeedsCargoSpace = true
+    local currentLootType = nil
+
     targetLoot = nil
 
     for _, loot in pairs(loots) do
     	if loot:isCollectable(ship) then
             currentLootDistance = distance2(loot.translationf, ship.translationf)
-            currentLootLevel = AILoot.getLootsLevel(loot)
+            currentLootType = AILoot.getLootType(loot)
+            currentLootNeedsCargoSpace = AILoot.getLootNeedsCargoSpace(currentLootType)
+            currentLootLevel = AILoot.getLootLevel(currentLootType)
 
+            fitsOnShip = currentLootNeedsCargoSpace == false or hasCargoSpace
             isBetterLoot = currentLootLevel > currentBestLootLevel
             isEqualLoot = currentLootLevel == currentBestLootLevel
             isCloserLoot = currentBestDistance == nil or currentLootDistance < currentBestDistance
 
-            if isBetterLoot or (isEqualLoot and isCloser) then
+            if fitsOnShip and (isBetterLoot or (isEqualLoot and isCloser)) then
                 targetLoot = loot
                 currentBestDistance = currentLootDistance
                 currentBestLootLevel = currentLootLevel
@@ -166,7 +176,7 @@ function AILoot.findLoot()
     end
 end
 
-function AILoot.getLootsType(loot)
+function AILoot.getLootType(loot)
     if loot:hasComponent(ComponentType.SystemUpgradeLoot) then
         return ComponentType.SystemUpgradeLoot
     elseif loot:hasComponent(ComponentType.TurretLoot) then
@@ -181,44 +191,38 @@ function AILoot.getLootsType(loot)
         return ComponentType.ResourceLoot
     elseif loot:hasComponent(ComponentType.CrewLoot) then
         return ComponentType.CrewLoot
+    else
+        return nil
     end
 end
 
-function AILoot.getLootsName(loot)
-    local lootType = AILoot.getLootsType(loot)
-    if lootType == ComponentType.SystemUpgradeLoot then
-        return "System Upgrade"
-    elseif lootType == ComponentType.TurretLoot then
-        return "Turret"
-    elseif lootType == ComponentType.CargoLoot then
-        return "Cargo"
-    elseif lootType == ComponentType.MoneyLoot then
-        return "Money"
-    elseif lootType == ComponentType.ColorLoot then
-        return "Color Sample"
-    elseif lootType == ComponentType.ResourceLoot then
-        return "Resource"
-    elseif lootType == ComponentType.CrewLoot then
-        return "Crew"
+function AILoot.getLootName(lootType)
+    if lootType = nil then return "Loot" end
+
+    if LootComponentNames[lootType] ~= nil then
+        return LootComponentNames[lootType]
+    else
+        return "Loot"
     end
 end
 
-function AILoot.getLootsLevel(loot)
-    local lootType = AILoot.getLootsType(loot)
-    if lootType == ComponentType.SystemUpgradeLoot then
-        return LootLevels.High
-    elseif lootType == ComponentType.TurretLoot then
-        return LootLevels.High
-    elseif lootType == ComponentType.CargoLoot then
+function AILoot.getLootLevel(lootType)
+    if lootType = nil then return LootLevels.Low end
+
+    if LootComponentLevels[lootType] ~= nil then
+        return LootComponentLevels[lootType]
+    else
         return LootLevels.Low
-    elseif lootType == ComponentType.MoneyLoot then
-        return LootLevels.Medium
-    elseif lootType == ComponentType.ColorLoot then
-        return LootLevels.Medium
-    elseif lootType == ComponentType.ResourceLoot then
-        return LootLevels.Low
-    elseif lootType == ComponentType.CrewLoot then
-        return LootLevels.Low
+    end
+end
+
+function AILoot.getLootNeedsCargoSpace(lootType)
+    if lootType = nil then return true end
+
+    if LootComponentLevels[lootType] ~= nil then
+        return LootComponentLevels[lootType]
+    else
+        return true
     end
 end
 
