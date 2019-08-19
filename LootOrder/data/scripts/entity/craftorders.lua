@@ -19,7 +19,6 @@ callable(CraftOrders, "onUserLootOrder")
 
 
 function CraftOrders.loot()
-    print ("CraftOrders.loot")
     if onClient() then
         invokeServerFunction("loot")
         ScriptUI():stopInteraction()
