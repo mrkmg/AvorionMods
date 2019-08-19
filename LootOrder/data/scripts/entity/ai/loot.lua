@@ -132,7 +132,6 @@ function AILoot.updateLooting(timeStep)
     else
         ai:setStatus("Looting - No Loot Left /* ship AI status*/"%_T, {})
         if isLootLeft or noLootLeftTimer <= 0 then
-            isLootLeft = false
             noLootLeftTimer = 10 * 60 -- ten minutes
 
             local faction = Faction(Entity().factionIndex)
@@ -143,6 +142,7 @@ function AILoot.updateLooting(timeStep)
                 faction:sendChatMessage(ship.name or "", ChatMessageType.Normal, "Sir, we can't find any more collectable loot in \\s(%s)!"%_T, coords)
             end
         end
+        isLootLeft = false
     end
 end
 
@@ -177,7 +177,7 @@ function AILoot.findLoot(skipMyTeam)
         teamsLoots = {}
     else
          teamLoots = AILoot.getTeamsLoots()
-     end
+    end
 
     for _, loot in pairs(loots) do
         if loot:isCollectable(ship) then
@@ -185,22 +185,22 @@ function AILoot.findLoot(skipMyTeam)
 
             currentLootNeedsCargoSpace = AILoot.getLootNeedsCargoSpace(currentLootType)
             if currentLootNeedsCargoSpace and not hasCargoSpace then
-                goto continue
+                goto findLootContinue
             end
 
             currentLootLevel = AILoot.getLootLevel(currentLootType)
             if currentLootLevel < currentBestLootLevel then
-                goto continue
+                goto findLootContinue
             end
 
             currentLootDistance = distance(loot.translationf, ship.translationf)
             if currentLootLevel == currentBestLootLevel and currentLootDistance > currentBestDistance then
-                goto continue
+                goto findLootContinue
             end
 
             if not skipMyTeam and AILoot.isLootCloseTo(teamLoots, loot) then
                 didSkipForMyTeam = true
-                goto continue
+                goto findLootContinue
             end
 
             -- Is better loot, or equal and closer, fits on ship, and (if checked) not being collected by a teammate
@@ -208,7 +208,7 @@ function AILoot.findLoot(skipMyTeam)
             currentBestDistance = currentLootDistance
             currentBestLootLevel = currentLootLevel
 
-            ::continue::
+            ::findLootContinue::
         end
     end
 
