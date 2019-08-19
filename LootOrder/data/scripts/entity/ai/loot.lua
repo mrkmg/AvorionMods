@@ -52,18 +52,35 @@ local collectAttemptCounter = 0
 local noLootLeftTimer = 0
 local wasInited = false
 
-if onServer() then
+function AILoot.canContinueLooting()
+    -- prevent terminating script before it even started
+    if not wasInited then return true end
+
+    return isLootLeft
+end
+
+function AILoot.getCurrentLootTarget()
+    return targetLoot
+end
+callable(AILoot, "getCurrentLootTarget")
 
 function AILoot.getUpdateInterval()
     if not isLootLeft then return 15 end
     return 1
 end
 
-
-function AILoot.updateServer(timeStep)
+function AILoot.hasCaptain()
     local ship = Entity()
 
     if ship.hasPilot or ((ship.playerOwned or ship.allianceOwned) and ship:getCrewMembers(CrewProfessionType.Captain) == 0) then
+        return false
+    end
+
+    return true
+end
+
+function AILoot.updateServer(timeStep)
+    if not AILoot.hasCaptain() then
         ShipAI():setPassive()
         terminate()
         return
@@ -77,13 +94,6 @@ function AILoot.updateServer(timeStep)
         noLootLeftTimer = noLootLeftTimer - timeStep
     end
 
-end
-
-function AILoot.canContinueLooting()
-    -- prevent terminating script before it even started
-    if not wasInited then return true end
-
-    return isLootLeft
 end
 
 function AILoot.updateLooting(timeStep)
@@ -136,13 +146,17 @@ function AILoot.updateLooting(timeStep)
     end
 end
 
-function AILoot.findLoot()
+function AILoot.findLoot(skipMyTeam)
+    if skipMyTeam == nil then skipMyTeam = false end
+
 	local loots = {Sector():getEntitiesByType(EntityType.Loot)}
     local ship = Entity()
     local isBetterLoot = false
     local isEqualLoot = false
     local isCloserLoot = false
     local fitsOnShip = false
+    local isTooCloseToTeammate = false
+    local isStuck = false
 
     local currentBestDistance = nil
     local currentBestLootLevel = LootLevels.None
@@ -153,47 +167,90 @@ function AILoot.findLoot()
     local currentLootNeedsCargoSpace = true
     local currentLootType = nil
 
+    local didSkipForMyTeam = false
+
     targetLoot = nil
+
+    local teamsLoots
+
+    if skipMyTeam then
+        teamsLoots = {}
+    else
+         teamLoots = AILoot.getTeamsLoots()
+     end
 
     for _, loot in pairs(loots) do
     	if loot:isCollectable(ship) then
-            currentLootDistance = distance2(loot.translationf, ship.translationf)
             currentLootType = AILoot.getLootType(loot)
+
             currentLootNeedsCargoSpace = AILoot.getLootNeedsCargoSpace(currentLootType)
-            currentLootLevel = AILoot.getLootLevel(currentLootType)
-
-            fitsOnShip = currentLootNeedsCargoSpace == false or hasCargoSpace
-            isBetterLoot = currentLootLevel > currentBestLootLevel
-            isEqualLoot = currentLootLevel == currentBestLootLevel
-            isCloserLoot = currentBestDistance == nil or currentLootDistance < currentBestDistance
-
-            if fitsOnShip and (isBetterLoot or (isEqualLoot and isCloser)) then
-                targetLoot = loot
-                currentBestDistance = currentLootDistance
-                currentBestLootLevel = currentLootLevel
+            if currentLootNeedsCargoSpace and not hasCargoSpace then
+                goto continue
             end
+
+            currentLootLevel = AILoot.getLootLevel(currentLootType)
+            if currentLootLevel < currentBestLootLevel then
+                goto continue
+            end
+
+            currentLootDistance = distance(loot.translationf, ship.translationf)
+            if currentLootLevel == currentBestLootLevel and currentLootDistance > currentBestDistance then
+                goto continue
+            end
+
+            if not skipMyTeam and AILoot.isLootCloseTo(teamLoots, loot) then
+                didSkipForMyTeam = true
+                goto continue
+            end
+
+            -- Is better loot, or equal and closer, fits on ship, and (if checked) not being collected by a teammate
+            targetLoot = loot
+            currentBestDistance = currentLootDistance
+            currentBestLootLevel = currentLootLevel
+
+            ::continue::
 		end
+    end
+
+    if not valid(targetLoot) and didSkipForMyTeam then
+        AILoot.findLoot(true)
     end
 end
 
-function AILoot.getLootType(loot)
-    if loot:hasComponent(ComponentType.SystemUpgradeLoot) then
-        return ComponentType.SystemUpgradeLoot
-    elseif loot:hasComponent(ComponentType.TurretLoot) then
-        return ComponentType.TurretLoot
-    elseif loot:hasComponent(ComponentType.CargoLoot) then
-        return ComponentType.CargoLoot
-    elseif loot:hasComponent(ComponentType.MoneyLoot) then
-        return ComponentType.MoneyLoot
-    elseif loot:hasComponent(ComponentType.ColorLoot) then
-        return ComponentType.ColorLoot
-    elseif loot:hasComponent(ComponentType.ResourceLoot) then
-        return ComponentType.ResourceLoot
-    elseif loot:hasComponent(ComponentType.CrewLoot) then
-        return ComponentType.CrewLoot
-    else
-        return nil
+function AILoot.isLootCloseTo(lootList, lootToCheck)
+    local calculatedDistance 
+    for _,loot in pairs(lootList) do
+        if valid(loot) and valid(lootToCheck) then
+            calculatedDistance = distance(loot.translationf, lootToCheck, translationf)
+
+            if calculatedDistance < 500 then
+                return true
+            end
+        end
     end
+    return false
+end
+
+function AILoot.getLootType(loot)
+    local lootType = nil
+
+    if loot:hasComponent(ComponentType.SystemUpgradeLoot) then
+        lootType = ComponentType.SystemUpgradeLoot
+    elseif loot:hasComponent(ComponentType.TurretLoot) then
+        lootType = ComponentType.TurretLoot
+    elseif loot:hasComponent(ComponentType.CargoLoot) then
+        lootType = ComponentType.CargoLoot
+    elseif loot:hasComponent(ComponentType.MoneyLoot) then
+        lootType = ComponentType.MoneyLoot
+    elseif loot:hasComponent(ComponentType.ColorLoot) then
+        lootType = ComponentType.ColorLoot
+    elseif loot:hasComponent(ComponentType.ResourceLoot) then
+        lootType = ComponentType.ResourceLoot
+    elseif loot:hasComponent(ComponentType.CrewLoot) then
+        lootType = ComponentType.CrewLoot
+    end
+
+    return lootType
 end
 
 function AILoot.getLootName(lootType)
@@ -226,4 +283,29 @@ function AILoot.getLootNeedsCargoSpace(lootType)
     end
 end
 
+function AILoot.getTeamsLoots()
+    local teamsLoots = {}
+    local teamsLootsNum = 1
+
+    local myShip = Entity()
+    local ships = {Sector():getEntitiesByType(EntityType.Ship)}
+
+    for _,ship in pairs(ships) do
+        if (ship.playerOwned or ship.allianceOwned) and myShip.factionIndex == ship.factionIndex then
+            for index, name in pairs(ship:getScripts()) do
+                --Fix for path issues on windows
+                local fixedName = string.gsub(name, "\\", "/")
+                if string.match(fixedName, "data/scripts/entity/ai/loot.lua") then
+                    local ret, result = ship:invokeFunction("data/scripts/entity/ai/loot.lua", "getCurrentLootTarget")
+                    if ret == 0 and valid(result) then 
+                        teamsLoots[teamsLootsNum] = result
+                        teamsLootsNum = teamsLootsNum + 1
+                    end
+                end
+            end
+
+        end
+    end
+
+    return teamsLoots
 end
