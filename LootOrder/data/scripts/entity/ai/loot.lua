@@ -97,18 +97,18 @@ function AILoot.updateServer(timeStep)
 end
 
 function AILoot.updateLooting(timeStep)
-	local ship = Entity()
+    local ship = Entity()
     isLootLeft = true
 
-	if (ship.freeCargoSpace < 1 and hasCargoSpace) then
-		hasCargoSpace = false
+    if (ship.freeCargoSpace < 1 and hasCargoSpace) then
+        hasCargoSpace = false
     else
         hasCargoSpace = true
-	end
+    end
 
-	if not valid(targetLoot) then
-		AILoot.findLoot()
-	end
+    if not valid(targetLoot) then
+        AILoot.findLoot()
+    end
 
     local ai = ShipAI()
 
@@ -149,7 +149,7 @@ end
 function AILoot.findLoot(skipMyTeam)
     if skipMyTeam == nil then skipMyTeam = false end
 
-	local loots = {Sector():getEntitiesByType(EntityType.Loot)}
+    local loots = {Sector():getEntitiesByType(EntityType.Loot)}
     local ship = Entity()
     local isBetterLoot = false
     local isEqualLoot = false
@@ -180,7 +180,7 @@ function AILoot.findLoot(skipMyTeam)
      end
 
     for _, loot in pairs(loots) do
-    	if loot:isCollectable(ship) then
+        if loot:isCollectable(ship) then
             currentLootType = AILoot.getLootType(loot)
 
             currentLootNeedsCargoSpace = AILoot.getLootNeedsCargoSpace(currentLootType)
@@ -209,7 +209,7 @@ function AILoot.findLoot(skipMyTeam)
             currentBestLootLevel = currentLootLevel
 
             ::continue::
-		end
+        end
     end
 
     if not valid(targetLoot) and didSkipForMyTeam then

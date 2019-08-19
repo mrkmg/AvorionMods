@@ -46,8 +46,8 @@ function OrderChain.canEnchain(order)
         OrderChain.sendError("Can't enchain anything after a persistent salvage order."%_T)
         return false
     elseif not OrderChain.canEnchainAfter(last.action, last) then
-    	OrderChain.sendError("Can enchain anything after a ${name} order"%_T {name = last.action})
-    	return false
+        OrderChain.sendError("Can enchain anything after a ${name} order"%_T {name = last.action})
+        return false
     end
 
     return true
@@ -150,8 +150,8 @@ function OrderChain.updateServer(timeStep)
         end
     elseif moddedOrderChains[currentOrder.action] ~= nil then
         if OrderChain[moddedOrderChains[currentOrder.action].isFinishedFunction](currentOrder) then
-    		orderFinished = true
-    	end
+            orderFinished = true
+        end
     end
 
     if orderFinished then

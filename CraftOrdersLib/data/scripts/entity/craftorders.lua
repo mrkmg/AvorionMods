@@ -40,9 +40,9 @@ function CraftOrders.initUI()
     local index = 9
 
     for _, craftOrder in pairs(moddedCraftOrders) do
-    	window:createButton(splitter:partition(index), craftOrder.title, craftOrder.callback)
-    	index = index + 1
-	end
+        window:createButton(splitter:partition(index), craftOrder.title, craftOrder.callback)
+        index = index + 1
+    end
 end
 
 function CraftOrders.removeSpecialOrders()

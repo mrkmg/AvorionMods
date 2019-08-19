@@ -3,8 +3,8 @@
 local moddedMapCommands = {}
 
 function MapCommands.registerModdedMapCommand(id, commandInfo)
-	if moddedMapCommands[id] == nil then
-		moddedMapCommands[id] = commandInfo
+    if moddedMapCommands[id] == nil then
+        moddedMapCommands[id] = commandInfo
     end
 end
 
@@ -31,7 +31,7 @@ function MapCommands.initUI()
     table.insert(orders, {tooltip = "Stop"%_t,              icon = "data/textures/icons/halt.png",              callback = "onStopPressed",         type = OrderButtonType.Stop})
 
     for name,details in pairs(moddedMapCommands) do
-    	table.insert(orders, {tooltip = details.tooltip, icon = details.icon, callback = details.callback, type = name})
+        table.insert(orders, {tooltip = details.tooltip, icon = details.icon, callback = details.callback, type = name})
     end
 
     for i, order in pairs(orders) do
@@ -258,10 +258,10 @@ function MapCommands.updateButtonLocations()
             end
 
             if moddedMapCommands[orders[i].type] ~= nil and moddedMapCommands[orders[i].type].shouldHideCallback and moddedMapCommands[orders[i].type].shouldHideCallback ~= "" then
-            	if MapCommands[moddedMapCommands[orders[i].type].shouldHideCallback](selected) then
-            		add = false
-        		end
-        	end
+                if MapCommands[moddedMapCommands[orders[i].type].shouldHideCallback](selected) then
+                    add = false
+                end
+            end
 
             if add then
                 table.insert(visibleButtons, button)
