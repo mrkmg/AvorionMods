@@ -27,22 +27,22 @@ LootComponentLevels[ComponentType.ResourceLoot] = LootLevels.Low
 LootComponentLevels[ComponentType.CrewLoot] = LootLevels.Low
 
 local LootComponentNames = {}
-LootComponentLevels[ComponentType.SystemUpgradeLoot] = "System"
-LootComponentLevels[ComponentType.TurretLoot] = "Turret"
-LootComponentLevels[ComponentType.MoneyLoot] = "Credits"
-LootComponentLevels[ComponentType.ColorLoot] = "Color"
-LootComponentLevels[ComponentType.CargoLoot] = "Cargo"
-LootComponentLevels[ComponentType.ResourceLoot] = "Resource"
-LootComponentLevels[ComponentType.CrewLoot] = "Crew"
+LootComponentNames[ComponentType.SystemUpgradeLoot] = "System"
+LootComponentNames[ComponentType.TurretLoot] = "Turret"
+LootComponentNames[ComponentType.MoneyLoot] = "Credits"
+LootComponentNames[ComponentType.ColorLoot] = "Color"
+LootComponentNames[ComponentType.CargoLoot] = "Cargo"
+LootComponentNames[ComponentType.ResourceLoot] = "Resource"
+LootComponentNames[ComponentType.CrewLoot] = "Crew"
 
 local LootComponentNeedsCargo = {}
-LootComponentLevels[ComponentType.SystemUpgradeLoot] = false
-LootComponentLevels[ComponentType.TurretLoot] = false
-LootComponentLevels[ComponentType.MoneyLoot] = false
-LootComponentLevels[ComponentType.ColorLoot] = false
-LootComponentLevels[ComponentType.CargoLoot] = true
-LootComponentLevels[ComponentType.ResourceLoot] = true
-LootComponentLevels[ComponentType.CrewLoot] = false
+LootComponentNeedsCargo[ComponentType.SystemUpgradeLoot] = false
+LootComponentNeedsCargo[ComponentType.TurretLoot] = false
+LootComponentNeedsCargo[ComponentType.MoneyLoot] = false
+LootComponentNeedsCargo[ComponentType.ColorLoot] = false
+LootComponentNeedsCargo[ComponentType.CargoLoot] = true
+LootComponentNeedsCargo[ComponentType.ResourceLoot] = true
+LootComponentNeedsCargo[ComponentType.CrewLoot] = false
 
 local isLootLeft = false
 local hasCargoSpace = false
@@ -65,7 +65,7 @@ end
 callable(AILoot, "getCurrentLootTarget")
 
 function AILoot.getUpdateInterval()
-    if not isLootLeft then return 15 end
+    if wasInited and not isLootLeft then return 15 end
     return 1
 end
 
@@ -113,14 +113,9 @@ function AILoot.updateLooting(timeStep)
     local ai = ShipAI()
 
     if valid(targetLoot) then
-        collectAttemptCounter = collectAttemptCounter + timeStep
-
-        if collectAttemptCounter > 3 then
-            collectAttemptCounter = collectAttemptCounter - 3
-            if ai.isStuck then
-                stuckLoot[targetLoot.index.string] = true
-                AILoot.findLoot()
-            end
+        if ai.isStuck then
+            stuckLoot[targetLoot.index.string] = true
+            AILoot.findLoot()
         end
     end
 
@@ -158,7 +153,7 @@ function AILoot.findLoot(skipMyTeam)
     local isTooCloseToTeammate = false
     local isStuck = false
 
-    local currentBestDistance = nil
+    local currentBestDistance = 999999999999999
     local currentBestLootLevel = LootLevels.None
 
     local currentLootLevel = nil
@@ -179,9 +174,16 @@ function AILoot.findLoot(skipMyTeam)
          teamLoots = AILoot.getTeamsLoots()
     end
 
+
     for _, loot in pairs(loots) do
         if loot:isCollectable(ship) then
             currentLootType = AILoot.getLootType(loot)
+
+            print (AILoot.getLootName(currentLootType), currentLootDistance)
+
+            if stuckLoot[loot.index.string] == true then
+                goto findLootContinue
+            end
 
             currentLootNeedsCargoSpace = AILoot.getLootNeedsCargoSpace(currentLootType)
             if currentLootNeedsCargoSpace and not hasCargoSpace then
@@ -221,8 +223,8 @@ function AILoot.isLootCloseTo(lootList, lootToCheck)
     local calculatedDistance 
     for _,loot in pairs(lootList) do
         if valid(loot) and valid(lootToCheck) then
-            calculatedDistance = distance(loot.translationf, lootToCheck, translationf)
-
+            calculatedDistance = distance(loot.translationf, lootToCheck.translationf)
+            print (calculatedDistance)
             if calculatedDistance < 500 then
                 return true
             end
@@ -254,7 +256,7 @@ function AILoot.getLootType(loot)
 end
 
 function AILoot.getLootName(lootType)
-    if lootType = nil then return "Loot" end
+    if lootType == nil then return "Loot" end
 
     if LootComponentNames[lootType] ~= nil then
         return LootComponentNames[lootType]
@@ -264,7 +266,7 @@ function AILoot.getLootName(lootType)
 end
 
 function AILoot.getLootLevel(lootType)
-    if lootType = nil then return LootLevels.Low end
+    if lootType == nil then return LootLevels.Low end
 
     if LootComponentLevels[lootType] ~= nil then
         return LootComponentLevels[lootType]
@@ -274,10 +276,10 @@ function AILoot.getLootLevel(lootType)
 end
 
 function AILoot.getLootNeedsCargoSpace(lootType)
-    if lootType = nil then return true end
+    if lootType == nil then return true end
 
-    if LootComponentLevels[lootType] ~= nil then
-        return LootComponentLevels[lootType]
+    if LootComponentNeedsCargo[lootType] ~= nil then
+        return LootComponentNeedsCargo[lootType]
     else
         return true
     end
@@ -297,7 +299,8 @@ function AILoot.getTeamsLoots()
                 local fixedName = string.gsub(name, "\\", "/")
                 if string.match(fixedName, "data/scripts/entity/ai/loot.lua") then
                     local ret, result = ship:invokeFunction("data/scripts/entity/ai/loot.lua", "getCurrentLootTarget")
-                    if ret == 0 and valid(result) then 
+
+                    if ret == 0 and result ~= nil and valid(result) then 
                         teamsLoots[teamsLootsNum] = result
                         teamsLootsNum = teamsLootsNum + 1
                     end
