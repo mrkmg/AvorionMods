@@ -48,7 +48,6 @@ local isLootLeft = false
 local hasCargoSpace = false
 local stuckLoot = {}
 local targetLoot = nil
-local collectAttemptCounter = 0
 local noLootLeftTimer = 0
 local wasInited = false
 
@@ -93,51 +92,64 @@ function AILoot.updateServer(timeStep)
     if not isLootLeft then
         noLootLeftTimer = noLootLeftTimer - timeStep
     end
-
 end
 
 function AILoot.updateLooting(timeStep)
-    local ship = Entity()
-    isLootLeft = true
+    AILoot.checkCargo()
+    AILoot.checkLoot()
 
+    if valid(targetLoot) then
+        AILoot.gotoLoot()
+    else
+        AILoot.announceNoLootLeft(timeStep)
+    end
+end
+
+function AILoot.gotoLoot()
+    local lootName = AILoot.getLootName(AILoot.getLootType(targetLoot));
+    ShipAI():setStatus("Looting ${name} /* ship AI status*/"%_T%{name = lootName}, {})
+    ShipAI():setFly(targetLoot.translationf, 0)
+end
+
+function AILoot.announceNoLootLeft(timeStep)
+    ShipAI():setStatus("Looting - No Loot Left /* ship AI status*/"%_T, {})
+    if isLootLeft or noLootLeftTimer <= 0 then
+        noLootLeftTimer = 10 * 60 -- ten minutes
+        local faction = Faction(Entity().factionIndex)
+        if faction then
+            local x, y = Sector():getCoordinates()
+            local coords = tostring(x) .. ":" .. tostring(y)
+            local shipName = ship.name or ""
+            local errorMessage = "Your ship in sector %s can't find any more collectable loot."%_T
+            local chatMessage = "Sir, we can't find any more collectable loot in \\s(%s)!"%_T
+            faction:sendChatMessage(shipName, ChatMessageType.Error, errorMessage, coords)
+            faction:sendChatMessage(shipName, ChatMessageType.Normal, chatMessage, coords)
+        end
+    else
+        noLootLeftTimer = noLootLeftTimer + timeStep
+    end
+end
+
+function AILoot.checkCargo()
     if (ship.freeCargoSpace < 1 and hasCargoSpace) then
         hasCargoSpace = false
     else
         hasCargoSpace = true
+    end
+end
+
+function AILoot.checkLoot()
+    if valid(targetLoot) and ShipAI().isStuck then
+        stuckLoot[targetLoot.index.string] = true
+        targetLoot = nil
     end
 
     if not valid(targetLoot) then
         AILoot.findLoot()
     end
 
-    local ai = ShipAI()
-
     if valid(targetLoot) then
-        if ai.isStuck then
-            stuckLoot[targetLoot.index.string] = true
-            AILoot.findLoot()
-        end
-    end
-
-    if valid(targetLoot) then
-        local lootName = AILoot.getLootName(AILoot.getLootType(targetLoot));
-
-        ai:setStatus("Looting ${name} /* ship AI status*/"%_T%{name = lootName}, {})
-        ai:setFly(targetLoot.translationf, 0)
-    else
-        ai:setStatus("Looting - No Loot Left /* ship AI status*/"%_T, {})
-        if isLootLeft or noLootLeftTimer <= 0 then
-            noLootLeftTimer = 10 * 60 -- ten minutes
-
-            local faction = Faction(Entity().factionIndex)
-            if faction then
-                local x, y = Sector():getCoordinates()
-                local coords = tostring(x) .. ":" .. tostring(y)
-                faction:sendChatMessage(ship.name or "", ChatMessageType.Error, "Your ship in sector %s can't find any more collectable loot."%_T, coords)
-                faction:sendChatMessage(ship.name or "", ChatMessageType.Normal, "Sir, we can't find any more collectable loot in \\s(%s)!"%_T, coords)
-            end
-        end
-        isLootLeft = false
+        isLootLeft = true
     end
 end
 
@@ -146,24 +158,16 @@ function AILoot.findLoot(skipMyTeam)
 
     local loots = {Sector():getEntitiesByType(EntityType.Loot)}
     local ship = Entity()
-    local isBetterLoot = false
-    local isEqualLoot = false
-    local isCloserLoot = false
-    local fitsOnShip = false
-    local isTooCloseToTeammate = false
-    local isStuck = false
 
     local currentBestDistance = 999999999999999
     local currentBestLootLevel = LootLevels.None
 
-    local currentLootLevel = nil
+    local currentLootLevel
     local currentLootDistance
-
-    local currentLootNeedsCargoSpace = true
-    local currentLootType = nil
+    local currentLootNeedsCargoSpace
+    local currentLootType
 
     local didSkipForMyTeam = false
-
     targetLoot = nil
 
     local teamsLoots
@@ -234,7 +238,7 @@ function AILoot.isLootCloseTo(lootList, lootToCheck)
 end
 
 function AILoot.getLootType(loot)
-    local lootType = nil
+    local lootType
 
     if loot:hasComponent(ComponentType.SystemUpgradeLoot) then
         lootType = ComponentType.SystemUpgradeLoot
@@ -294,7 +298,7 @@ function AILoot.getTeamsLoots()
 
     for _,ship in pairs(ships) do
         if (ship.playerOwned or ship.allianceOwned) and myShip.factionIndex == ship.factionIndex then
-            for index, name in pairs(ship:getScripts()) do
+            for _, name in pairs(ship:getScripts()) do
                 --Fix for path issues on windows
                 local fixedName = string.gsub(name, "\\", "/")
                 if string.match(fixedName, "data/scripts/entity/ai/loot.lua") then
