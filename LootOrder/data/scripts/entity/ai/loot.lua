@@ -47,7 +47,7 @@ LootComponentNeedsCargo[ComponentType.CrewLoot] = false
 local isLootLeft = false
 local hasCargoSpace = false
 local stuckLoot = {}
-local targetLoot = nil
+local targetLoot
 local noLootLeftTimer = 0
 local wasInited = false
 
@@ -85,27 +85,19 @@ function AILoot.updateServer(timeStep)
         return
     end
 
-    AILoot.updateLooting(timeStep)
-
-    wasInited = true
-
-    if not isLootLeft then
-        noLootLeftTimer = noLootLeftTimer - timeStep
-    end
-end
-
-function AILoot.updateLooting(timeStep)
     AILoot.checkCargo()
     AILoot.checkLoot()
 
     if valid(targetLoot) then
-        AILoot.gotoLoot()
+        AILoot.approachLoot()
     else
         AILoot.announceNoLootLeft(timeStep)
     end
+
+    wasInited = true
 end
 
-function AILoot.gotoLoot()
+function AILoot.approachLoot()
     local lootName = AILoot.getLootName(AILoot.getLootType(targetLoot));
     ShipAI():setStatus("Looting ${name} /* ship AI status*/"%_T%{name = lootName}, {})
     ShipAI():setFly(targetLoot.translationf, 0)
@@ -114,12 +106,13 @@ end
 function AILoot.announceNoLootLeft(timeStep)
     ShipAI():setStatus("Looting - No Loot Left /* ship AI status*/"%_T, {})
     if isLootLeft or noLootLeftTimer <= 0 then
+        isLootLeft = false
         noLootLeftTimer = 10 * 60 -- ten minutes
         local faction = Faction(Entity().factionIndex)
         if faction then
             local x, y = Sector():getCoordinates()
             local coords = tostring(x) .. ":" .. tostring(y)
-            local shipName = ship.name or ""
+            local shipName = Entity().name or ""
             local errorMessage = "Your ship in sector %s can't find any more collectable loot."%_T
             local chatMessage = "Sir, we can't find any more collectable loot in \\s(%s)!"%_T
             faction:sendChatMessage(shipName, ChatMessageType.Error, errorMessage, coords)
@@ -131,7 +124,7 @@ function AILoot.announceNoLootLeft(timeStep)
 end
 
 function AILoot.checkCargo()
-    if (ship.freeCargoSpace < 1 and hasCargoSpace) then
+    if (Entity().freeCargoSpace < 1 and hasCargoSpace) then
         hasCargoSpace = false
     else
         hasCargoSpace = true
@@ -159,7 +152,7 @@ function AILoot.findLoot(skipMyTeam)
     local loots = {Sector():getEntitiesByType(EntityType.Loot)}
     local ship = Entity()
 
-    local currentBestDistance = 999999999999999
+    local currentBestDistance
     local currentBestLootLevel = LootLevels.None
 
     local currentLootLevel
@@ -171,19 +164,16 @@ function AILoot.findLoot(skipMyTeam)
     targetLoot = nil
 
     local teamsLoots
-
     if skipMyTeam then
         teamsLoots = {}
     else
-         teamLoots = AILoot.getTeamsLoots()
+        teamsLoots = AILoot.getTeamsLoots()
     end
 
 
     for _, loot in pairs(loots) do
         if loot:isCollectable(ship) then
             currentLootType = AILoot.getLootType(loot)
-
-            print (AILoot.getLootName(currentLootType), currentLootDistance)
 
             if stuckLoot[loot.index.string] == true then
                 goto findLootContinue
@@ -200,11 +190,11 @@ function AILoot.findLoot(skipMyTeam)
             end
 
             currentLootDistance = distance(loot.translationf, ship.translationf)
-            if currentLootLevel == currentBestLootLevel and currentLootDistance > currentBestDistance then
+            if currentLootLevel == currentBestLootLevel and (currentLootDistance == nil or currentLootDistance > currentBestDistance) then
                 goto findLootContinue
             end
 
-            if not skipMyTeam and AILoot.isLootCloseTo(teamLoots, loot) then
+            if not skipMyTeam and AILoot.isLootCloseTo(teamsLoots, loot) then
                 didSkipForMyTeam = true
                 goto findLootContinue
             end
@@ -228,7 +218,7 @@ function AILoot.isLootCloseTo(lootList, lootToCheck)
     for _,loot in pairs(lootList) do
         if valid(loot) and valid(lootToCheck) then
             calculatedDistance = distance(loot.translationf, lootToCheck.translationf)
-            print (calculatedDistance)
+
             if calculatedDistance < 500 then
                 return true
             end
