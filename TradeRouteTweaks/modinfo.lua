@@ -4,17 +4,17 @@ meta =
     -- ID of your mod; Make sure this is unique!
     -- Will be used for identifying the mod in dependency lists
     -- Will be changed to workshop ID (ensuring uniqueness) when you upload the mod to the workshop
-    id = "XXX",
+    id = "1841868691",
 
     -- Name of your mod; You may want this to be unique, but it's not absolutely necessary.
     -- This is an additional helper attribute for you to easily identify your mod in the Mods() list
-    name = "TradeRouteStocksLevels",
+    name = "TradeRouteTweaks",
 
     -- Title of your mod that will be displayed to players
-    title = "Trade Route Stock Levels",
+    title = "Trade Route Tweaks",
 
     -- Description of your mod that will be displayed to players
-    description = "Adds stock levels to the trade routes",
+    description = "Tweaks the trade routes screen to be easier to use",
 
     -- Insert all authors into this list
     authors = {"Kevin Gravier (MrKMG)"},

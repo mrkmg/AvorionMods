@@ -1,6 +1,7 @@
 
 local routeStockLabels = {}
-
+local routeBackButton
+local routeForwardButton
 function buildRoutesGui(window)
     local buttonCaption = "Show"%_t
 
@@ -12,22 +13,24 @@ function buildRoutesGui(window)
 
     window:createFrame(Rect(size))
 
+    local fontSize = 12
+
     local priceX = 10
-    local stockX = 80 -- Modded
+    local coordLabelX = 60
+    local stockX = 120 -- Modded
     local stationLabelX = 170
-    local coordLabelX = 80
     local onShipLabelX = 360
 
     -- footer
-    window:createButton(Rect(10, size.y - 40, 60, size.y - 10), "<", previousPageFunc)
-    window:createButton(Rect(size.x - 60, size.y - 40, size.x - 10, size.y - 10), ">", nextPageFunc)
+    routeBackButton = window:createButton(Rect(10, size.y - 40, 60, size.y - 10), "<", previousPageFunc)
+    routeForwardButton = window:createButton(Rect(size.x - 60, size.y - 40, size.x - 10, size.y - 10), ">", nextPageFunc)
 
     local y = 35
     for i = 1, 15 do
 
         local yText = y + 6
 
-        local msplit = UIVerticalSplitter(Rect(10, y, size.x - 10, 30 + y), 10, 0, 0.5)
+        local msplit = UIVerticalSplitter(Rect(10, y, size.x - 15, 25 + y), 10, 0, 0.5)
         msplit.leftSize = 30
 
         local icon = window:createPicture(msplit.left, "")
@@ -44,7 +47,7 @@ function buildRoutesGui(window)
         routeStockLabels[i] = {} -- Modded
         routeStationLabels[i] = {}
         routeButtons[i] = {}
-        routeAmountOnShipLabels[i] = nil
+        routeAmountOnShipLabels[i] = {}
 
         for j, rect in pairs({vsplit.left, vsplit.right}) do
 
@@ -55,36 +58,33 @@ function buildRoutesGui(window)
 
             if i == 1 then
                 -- header
-                window:createLabel(vec2(x + priceX, 10), "Cr"%_t, 15)
-                window:createLabel(vec2(x + coordLabelX, 10), "Coord"%_t, 15)
+                window:createLabel(vec2(x + priceX, 10), "Cr"%_t, fontSize)
+                window:createLabel(vec2(x + coordLabelX, 10), "Coord"%_t, fontSize)
 
                 if j == 1 then
-                    window:createLabel(vec2(x + stationLabelX, 10), "From"%_t, 15)
-                    window:createLabel(vec2(x + stockX, 10), "Stock"%_t, 15) -- Modded
+                    window:createLabel(vec2(x + stationLabelX, 10), "From"%_t, fontSize)
+                    window:createLabel(vec2(x + stockX, 10), "Stock"%_t, fontSize) -- Modded
+                    window:createLabel(vec2(x + onShipLabelX, 10), "Profit"%_t, fontSize) -- Modded
                 else
-                    window:createLabel(vec2(x + stationLabelX, 10), "To"%_t, 15)
-                    window:createLabel(vec2(x + stockX, 10), "Stock"%_t, 15) -- Modded
+                    window:createLabel(vec2(x + stationLabelX, 10), "To"%_t, fontSize)
+                    window:createLabel(vec2(x + stockX, 10), "Wants"%_t, fontSize) -- Modded
 
-                    window:createLabel(vec2(x + onShipLabelX, 10), "You"%_t, 15)
+                    window:createLabel(vec2(x + onShipLabelX, 10), "You"%_t, fontSize)
                 end
             end
 
             local frame = window:createFrame(ssplit.left)
 
-            local priceLabel = window:createLabel(vec2(x + priceX, yText), "", 15)
-            local stationLabel = window:createLabel(vec2(x + stationLabelX, yText), "", 15)
-            local stockLabel = window:createLabel(vec2(x + stockX, yText), "", 15) -- Modded
-            local coordLabel = window:createLabel(vec2(x + coordLabelX, yText), "", 15)
+            local priceLabel = window:createLabel(vec2(x + priceX, yText), "", fontSize)
+            local stationLabel = window:createLabel(vec2(x + stationLabelX, yText), "", fontSize)
+            local stockLabel = window:createLabel(vec2(x + stockX, yText), "", fontSize) -- Modded
+            local coordLabel = window:createLabel(vec2(x + coordLabelX, yText), "", fontSize)
+            local onShipLabel = window:createLabel(vec2(x + onShipLabelX, yText), "", fontSize)
 
             local button = window:createButton(ssplit.right, "", buttonCallback)
             button.icon = "data/textures/icons/position-marker.png"
 
-            if j == 2 then
-                local onShipLabel = window:createLabel(vec2(x + onShipLabelX, yText), "", 15)
-                onShipLabel.font = FontType.Normal
-                onShipLabel:hide()
-                routeAmountOnShipLabels[i] = onShipLabel
-            end
+            onShipLabel.font = FontType.Normal
 
             frame:hide();
             priceLabel:hide();
@@ -92,10 +92,11 @@ function buildRoutesGui(window)
             coordLabel:hide();
             stationLabel:hide();
             button:hide();
+            onShipLabel:hide()
 
             priceLabel.font = FontType.Normal
             coordLabel.font = FontType.Normal
-            stockLabel.fond = FontType.Normal -- Modded
+            stockLabel.font = FontType.Normal -- Modded
             stationLabel.font = FontType.Normal
 
             table.insert(routeFrames[i], frame)
@@ -104,10 +105,11 @@ function buildRoutesGui(window)
             table.insert(routeStockLabels[i], stockLabel) -- Modded
             table.insert(routeStationLabels[i], stationLabel)
             table.insert(routeButtons[i], button)
+            table.insert(routeAmountOnShipLabels[i], onShipLabel)
         end
 
 
-        y = y + 35
+        y = y + 32
     end
 
 end
@@ -119,43 +121,60 @@ function refreshRoutesUI()
         return
     end
 
+    routeBackButton:hide()
+    routeForwardButton:hide()
+
     for index = 1, 15 do
         for j = 1, 2 do
             routePriceLabels[index][j]:hide()
             routeStationLabels[index][j]:hide()
             routeCoordLabels[index][j]:hide()
-            routeStockLabels[index]:hide() -- Modded
+            routeStockLabels[index][j]:hide() -- Modded
             routeFrames[index][j]:hide()
             routeButtons[index][j]:hide()
             routeIcons[index]:hide()
-            routeAmountOnShipLabels[index]:hide()
+            routeAmountOnShipLabels[index][j]:hide()
         end
     end
 
-    table.sort(routes, routesByPriceMargin)
+    table.sort(routes, routesByProfit)
+
+    if routesPage == nil or routesPage > 0 then
+        routeBackButton:show()
+    end
 
     local index = 0
     for i, route in pairs(routes) do
+
+        if i > (routesPage + 1) * 15 then
+            routeForwardButton:show()
+        end
 
         if i > routesPage * 15 and i <= (routesPage + 1) * 15 then
             index = index + 1
             if index > 15 then break end
 
+            local profit, prefix = getReadableNumber(routeProfit(route))
+
+
             for j, offer in pairs({route.buyable, route.sellable}) do
 
                 routePriceLabels[index][j].caption = createMonetaryString(offer.price)
                 routeStationLabels[index][j].caption = offer.station%_t % offer.titleArgs
-                routeStockLabels[index][j].caption = math.floor(offer.stock) .. " / " .. math.floor(offer.maxStock) -- Modded
                 routeCoordLabels[index][j].caption = tostring(offer.coords)
                 routeIcons[index].picture = offer.good.icon
                 routeIcons[index].tooltip = offer.good:displayName(2)
-                if j == 2 then
+
+                if j == 1 then
+                    routeAmountOnShipLabels[index][j].caption = profit .. prefix
+                    routeStockLabels[index][j].caption = math.floor(offer.stock)  -- Modded
+                else
+                    routeStockLabels[index][j].caption = math.floor(offer.maxStock - offer.stock) -- Modded
                     if offer.amountOnShip > 0 then
-                        routeAmountOnShipLabels[index].caption = offer.amountOnShip
+                        routeAmountOnShipLabels[index][j].caption = offer.amountOnShip
                     else
-                        routeAmountOnShipLabels[index].caption = "-"
+                        routeAmountOnShipLabels[index][j].caption = "-"
                     end
-                    routeAmountOnShipLabels[index]:show()
                 end
 
                 routePriceLabels[index][j]:show()
@@ -164,8 +183,28 @@ function refreshRoutesUI()
                 routeStockLabels[index][j]:show() -- Modded
                 routeFrames[index][j]:show()
                 routeButtons[index][j]:show()
+                routeAmountOnShipLabels[index][j]:show()
                 routeIcons[index]:show()
             end
         end
     end
+end
+
+function routeProfit(route)
+    -- calculate route profit
+    local maxTrade = 0
+    local sellableStock = route.sellable.maxStock - route.sellable.stock
+    if sellableStock > route.buyable.stock then
+        maxTrade = route.buyable.stock
+    else
+        maxTrade = sellableStock
+    end
+    return (route.sellable.price - route.buyable.price) * maxTrade
+end
+
+function routesByProfit(a, b)
+    -- calculate max profit
+    local pa = routeProfit(a)
+    local pb = routeProfit(b)
+    return pa > pb
 end
