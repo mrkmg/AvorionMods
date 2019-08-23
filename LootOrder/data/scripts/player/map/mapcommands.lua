@@ -1,6 +1,6 @@
 -- LootOrder - by Kevin Gravier (MrKMG)
 
-include ("OrderTypes")
+include ("ordertypes")
 
 MapCommands.registerModdedMapCommand(OrderType.Loot, {
     tooltip = "Loot",
