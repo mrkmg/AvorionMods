@@ -30,8 +30,8 @@ function buildRoutesGui(window)
 
         local yText = y + 6
 
-        local msplit = UIVerticalSplitter(Rect(10, y, size.x - 15, 25 + y), 10, 0, 0.5)
-        msplit.leftSize = 30
+        local msplit = UIVerticalSplitter(Rect(10, y, size.x - 10, 30 + y), 10, 0, 0.5)
+        msplit.leftSize = 25
 
         local icon = window:createPicture(msplit.left, "")
         icon.isIcon = 1
@@ -158,6 +158,8 @@ function refreshRoutesUI()
 
 
             for j, offer in pairs({route.buyable, route.sellable}) do
+
+                printTable (offer)
 
                 routePriceLabels[index][j].caption = createMonetaryString(offer.price)
                 routeStationLabels[index][j].caption = offer.station%_t % offer.titleArgs
