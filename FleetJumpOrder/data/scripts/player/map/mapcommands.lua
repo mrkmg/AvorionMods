@@ -2,7 +2,7 @@
 -- v3
 -- made compatible with CraftOrdersLib by Kevin Gravier (MrKMG)
 
-include ("OrderTypes")
+include ("ordertypes")
 
 MapCommands.registerModdedMapCommand(OrderType.FlyThroughWormhole, {
     tooltip = "Wormhole"%_t,
