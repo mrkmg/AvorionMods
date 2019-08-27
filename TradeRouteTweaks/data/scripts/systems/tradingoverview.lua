@@ -17,8 +17,8 @@ function buildRoutesGui(window)
 
     local priceX = 10
     local coordLabelX = 60
-    local stockX = 120 -- Modded
-    local stationLabelX = 170
+    local stockX = 125 -- Modded
+    local stationLabelX = 175
     local onShipLabelX = 360
 
     -- footer

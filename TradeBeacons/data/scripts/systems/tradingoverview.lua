@@ -106,7 +106,6 @@ function requestSectorsData(caller)
     end
 end
 
-
 function receiveTradingInfoFromPlayer(caller, sectorsDataString)
     if not caller then
         return

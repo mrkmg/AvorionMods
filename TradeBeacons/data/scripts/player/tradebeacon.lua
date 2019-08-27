@@ -23,31 +23,25 @@ end
 
 function TradeBeacon.requestSectorsData(x, y, maxDistance, shipId, caller)
     if onServer() then
-        knownTradingShips[shipId] = {x = x, y = y, maxDistance = maxDistance }
-        TradeBeacon.sync()
-
         local sectorsData = {}
+
         for _, beaconData in pairs(knownBeacons) do
             if beaconData ~= nil then
-                if distance(vec2(beaconData.x, beaconData.y), vec2(x, y)) <= maxDistance then
-                    table.insert(sectorsData, beaconData.tradeData)
+                local dist = distance(vec2(beaconData.x, beaconData.y), vec2(x, y))
+                if dist <= maxDistance and dist > 0 then
+                    table.insert(sectorsData, beaconData.sectorData)
                 end
             end
         end
 
         if #sectorsData > 0 then
-            TradeBeacon.sendInfoToShip(x, y, shipId, caller, sectorsData)
+            local sectorsDataString = TradeBeaconSerializer.serializeSectorsData(sectorsData)
+            invokeRemoteEntityFunction(
+                x, y, nil, Uuid(shipId),
+                "tradingoverview.lua", "receiveTradingInfoFromPlayer",
+                caller, sectorsDataString
+            )
         end
     end
-end
-
-function TradeBeacon.sendInfoToShip(x, y, shipId, caller, sectorsData)
-    shipId = Uuid(shipId)
-    local sectorsDataString = TradeBeaconSerializer.serializeSectorsData(sectorsData)
-    invokeRemoteEntityFunction(
-            x, y, nil, shipId,
-            "tradingoverview.lua", "receiveTradingInfoFromPlayer",
-            caller, sectorsDataString
-    )
 end
 

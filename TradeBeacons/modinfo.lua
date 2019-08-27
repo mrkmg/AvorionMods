@@ -40,7 +40,6 @@ meta =
     -- },
     dependencies = {
         {id = "Avorion", max = "0.25.2"},
-        {id = "1722412006", min = "0.1.1"},
         {id = "1841868691", min = "1.0", optional = true},
     },
 

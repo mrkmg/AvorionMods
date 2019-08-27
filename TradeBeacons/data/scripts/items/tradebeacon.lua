@@ -47,17 +47,17 @@ function getPrice(rarity, seed)
 end
 
 function getMaterial(rarity)
-    if rarity.level == 2 then
+    if rarity.value == 2 then
         return Material(MaterialType.Titanium)
-    elseif rarity.level == 3 then
+    elseif rarity.value == 3 then
         return Material(MaterialType.Naonite)
-    elseif rarity.level == 4 then
+    elseif rarity.value == 4 then
         return Material(MaterialType.Trinium)
-    elseif rarity.level == 5 then
+    elseif rarity.value == 5 then
         return Material(MaterialType.Xanion)
-    elseif rarity.level == 6 then
+    elseif rarity.value == 6 then
         return Material(MaterialType.Ogonite)
-    elseif rarity.level == 7 then
+    elseif rarity.value == 7 then
         return Material(MaterialType.Avorion)
     end
     return Material(MaterialType.Iron)
@@ -162,8 +162,7 @@ function activate(item)
             ComponentType.EnergySystem
     )
 
-    local faction = Faction(craft.factionIndex)
-    local plan = PlanGenerator.makeBeaconPlan(faction)
+    local plan = PlanGenerator.makeBeaconPlan()
 
     plan:forceMaterial(getMaterial(item.rarity))
 
@@ -173,7 +172,7 @@ function activate(item)
 
     desc.position = getPositionInFront(craft, 20)
     desc:setMovePlan(plan)
-    desc.factionIndex = faction.index
+    desc.factionIndex = craft.factionIndex
     desc:setValue("lifespan", getLifespan(item.rarity))
 
     local satellite = Sector():createEntity(desc)

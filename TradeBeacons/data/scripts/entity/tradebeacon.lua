@@ -53,7 +53,7 @@ end
 function TradeBeacon.getTradeData()
     local sellable, buyable = TradingUtility.detectBuyableAndSellableGoods()
 
-    return TradeBeaconSerializer({sellable = sellable, buyable = buyable})
+    return TradeBeaconSerializer.serializeSectorData({sellable = sellable, buyable = buyable})
 end
 
 function TradeBeacon.updateServer(timeStep)
@@ -64,7 +64,7 @@ function TradeBeacon.updateServer(timeStep)
     burnOutTime = burnOutTime - timeStep
 
     local x, y = Sector():getCoordinates()
-    if self.data.time <= 0 then
+    if burnOutTime <= 0 then
         getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Normal, [[Your trade beacon in sector \s(%1%:%2%) burnt out!]]%_T, x, y)
         getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Warning, [[Your trade beacon in sector \s(%1%:%2%) burnt out!]]%_T, x, y)
         TradeBeacon.unregisterWithPlayer()
@@ -82,7 +82,7 @@ function TradeBeacon.updateClient(timeStep)
     end
 
     burnOutTime = burnOutTime - timeStep
-    self.sync()
+    TradeBeacon.sync()
 end
 
 function TradeBeacon.secure()
