@@ -1,8 +1,20 @@
+local UpgradeGenerator = include("upgradegenerator")
 
-function UtilityMerchant.shop:addItems()
-    local item = UsableInventoryItem("energysuppressor.lua", Rarity(RarityType.Exceptional))
-    UtilityMerchant.add(item, getInt(2, 3))
+local TradeBeacons_UtilityMerchant_ship_addItems = UtilityMerchant.shop.addItems
+function UtilityMerchant.shop:addItems(...)
+    TradeBeacons_UtilityMerchant_ship_addItems(self, ...)
 
-    local item2 = UsableInventoryItem("tradebeacon.lua", Rarity(RarityType.Exceptional))
-    UtilityMerchant.add(item2, getInt(3, 10))
+    local numSystems = getInt(1,3)
+    local madeSystems = 0
+
+    local x, y = Sector():getCoordinates()
+    local rarities, weights = UpgradeGenerator.getSectorProbabilities(x, y)
+    local seed = Seed(appTimeMs())
+    repeat
+        local rarity = rarities[selectByWeight(rand, weights)]
+        local item = UsableInventoryItem("tradebeacon.lua", rarity, seed)
+
+        UtilityMerchant.add(item, getInt(1, 15 - rarity.level))
+        madeSystems = madeSystems + 1
+    until madeSystems == numSystems
 end

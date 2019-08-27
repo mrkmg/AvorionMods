@@ -108,12 +108,9 @@ function buildRoutesGui(window)
             table.insert(routeAmountOnShipLabels[i], onShipLabel)
         end
 
-
         y = y + 32
     end
-
 end
-
 
 function refreshRoutesUI()
     if historySize == 0 then
@@ -156,7 +153,6 @@ function refreshRoutesUI()
 
             local profit, prefix = getReadableNumber(routeProfit(route))
 
-
             for j, offer in pairs({route.buyable, route.sellable}) do
                 routePriceLabels[index][j].caption = createMonetaryString(offer.price)
                 routeStationLabels[index][j].caption = offer.station%_t % offer.titleArgs
@@ -186,6 +182,7 @@ function refreshRoutesUI()
                 routeIcons[index]:show()
             end
         end
+
     end
 end
 

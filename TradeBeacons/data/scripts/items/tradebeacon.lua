@@ -4,14 +4,53 @@ package.path = package.path .. ";data/scripts/?.lua"
 local PlanGenerator = include("plangenerator")
 include("stringutility")
 
-function create(item, rarity)
+function getLifespan(rarity)
+    if rarity.value == 1 then
+        return 8
+    elseif rarity.value == 2 then
+        return 12
+    elseif rarity.value == 3 then
+        return 16
+    elseif rarity.value == 4 then
+        return 20
+    elseif rarity.value == 5 then
+        return 24
+    elseif rarity.value == 6 then
+        return 36
+    elseif rarity.value == 7 then
+        return 48
+    end
 
-    rarity = Rarity(RarityType.Exceptional)
+    return 2
+end
 
+function getPrice(rarity, seed)
+    math.randomseed(seed)
+
+    if rarity.value == 1 then
+        return getInt(5000, 10000)
+    elseif rarity.value == 2 then
+        return getInt(15000, 20000)
+    elseif rarity.value == 3 then
+        return getInt(50000, 70000)
+    elseif rarity.value == 4 then
+        return getInt(100000, 140000)
+    elseif rarity.value == 5 then
+        return getInt(300000, 350000)
+    elseif rarity.value == 6 then
+        return getInt(1000000, 1500000)
+    elseif rarity.value == 7 then
+        return getInt(10000000, 20000000)
+    end
+
+    return getInt(1000, 5000)
+end
+
+function create(item, rarity, seed)
     item.stackable = true
     item.depleteOnUse = true
     item.name = "Trade Beacon"%_t
-    item.price = 100000
+    item.price = getPrice(rarity, seed)
     item.icon = "data/textures/icons/satellite.png"
     item.rarity = rarity
     item:setValue("subtype", "TradeBeacon")
@@ -34,7 +73,7 @@ function create(item, rarity)
 
     local line = TooltipLine(18, 14)
     line.ltext = "Time"%_t
-    line.rtext = "24h"%_t
+    line.rtext = "${t}h"%_t%{t = getLifespan(rarity)}
     line.icon = "data/textures/icons/recharge-time.png"
     line.iconColor = ColorRGB(0.8, 0.8, 0.8)
     tooltip:addLine(line)
@@ -55,13 +94,12 @@ function create(item, rarity)
     tooltip:addLine(line)
 
     local line = TooltipLine(18, 14)
-    line.ltext = "to link the sector to your trade"%_t
+    line.ltext = "to allow ships with advanced"%_t
     tooltip:addLine(line)
 
     local line = TooltipLine(18, 14)
-    line.ltext = "routes."%_t
+    line.ltext = "trading system to scan for routes."%_t
     tooltip:addLine(line)
-
 
     item:setTooltip(tooltip)
 
@@ -118,6 +156,7 @@ function activate(item)
     desc.position = getPositionInFront(craft, 20)
     desc:setMovePlan(plan)
     desc.factionIndex = faction.index
+    desc:setValue("lifespan", getLifespan(item.rarity))
 
     local satellite = Sector():createEntity(desc)
     satellite:addScript("entity/tradebeacon.lua")

@@ -14,7 +14,7 @@ meta =
     title = "Trade Beacons",
 
     -- Description of your mod that will be displayed to players
-    description = "A new way to build trade routes. Drop trade beacons in sectors to maintain communication to those sectors.",
+    description = "A new way to build trade routes.\n\nAdds Trade Beacons and changes the trading systems to use those instead of a sector jump memory.\\Purchase Trade Beacons at Equipment Docks",
 
     -- Insert all authors into this list
     authors = {"Kevin Gravier (MrKMG)"},
@@ -40,15 +40,15 @@ meta =
     -- },
     dependencies = {
         {id = "Avorion", max = "0.25.2"},
+        {id = "1722412006", min = "0.1.1"},
         {id = "1841868691", min = "1.0", optional = true},
-        {id = "1722412006", min = "0.1.1", required = true},
     },
 
     -- Set to true if the mod only has to run on the server. Clients will get notified that the mod is running on the server, but they won't download it to themselves
     serverSideOnly = false,
 
     -- Set to true if the mod only has to run on the client, such as UI mods
-    clientSideOnly = true,
+    clientSideOnly = false,
 
     -- Set to true if the mod changes the savegame in a potentially breaking way, as in it adds scripts or mechanics that get saved into database and no longer work once the mod gets disabled
     -- logically, if a mod is client-side only, it can't alter savegames, but Avorion doesn't check for that at the moment
