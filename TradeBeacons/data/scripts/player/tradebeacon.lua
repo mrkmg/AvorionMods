@@ -1,63 +1,76 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 include ("sync")
+include ("utility")
 
 --namespace TradeBeacon
 TradeBeacon = {}
 defineSyncFunction("data", TradeBeacon)
 
---[[
-Trading Data
-
-Root
-{
-    sectorIndex = TradingData
-}
-
-TradingData
-{
-    sellable = {}
-    buyable = {}
-}
-
-]]--
 local knownBeacons = {}
-
-function printSource()
-    if onClient() then print ("On Client") end
-    if onServer() then print ("On Server") end
-end
-
+local knownTradingShips = {}
 
 function TradeBeacon.secure()
-    return knownBeacons
+    return {knownBeacons = knownBeacons, knownTradingShips = knownTradingShips}
 end
 
 function TradeBeacon.restore(data)
-    knownBeacons = data or {}
+    data = data or {}
+    if data.knownBeacons ~= nil then
+        knownBeacons = data.knownBeacons
+    end
+
+    if data.knownTradingShips ~= nil then
+        knownTradingShips = data.knownTradingShips
+    end
 end
 
 function TradeBeacon.onSync()
 
 end
 
-function TradeBeacon.removeTradingData(entityId)
-    printSource()
-    knownBeacons[entityId] = nil
-    TradeBeacon.sync()
+function TradeBeacon.sendInfoToShip(x, y, shipId, caller, tradeData)
+    shipId = Uuid(shipId)
+    invokeRemoteEntityFunction(
+        x, y, nil, shipId,
+        "tradingoverview.lua", "receiveTradingInfoFromBeacon",
+        caller, tradeData
+    )
 end
 
-function TradeBeacon.storeTradingData(x, y, entityId)
-    knownBeacons[entityId] = {x = x, y = y}
+function TradeBeacon.registerTradeBeacon(x, y, beaconId, tradeData)
+    if onClient() then
+        return
+    end
+    knownBeacons[beaconId] = {x = x, y = y, tradeData = tradeData}
+end
+callable(nil, "registerTradebeacon")
+
+function TradeBeacon.deregisterTradeBeacon(beaconId)
+    knownBeacons[beaconId] = nil
     TradeBeacon.sync()
 end
+callable(nil, "deregisterTradeBeacon")
 
-function TradeBeacon.getTradingData(x, y, targetEntityId)
+function TradeBeacon.registerTradingShip(x, y, maxDistance, shipId, caller)
+    if onClient() then
+        return
+    end
 
-    for beaconId, coords in pairs(knownBeacons) do
-        if coords ~= nil then
-            invokeRemoteEntityFunction(coords.x, coords.y, nil, beaconId, "data/scripts/entity/tradebeacon.lua", "sendRouteInfoTo", x, y, targetEntityId)
+    knownTradingShips[shipId] = {x = x, y = y, maxDistance = maxDistance }
+    TradeBeacon.sync()
+
+    for _, beaconData in pairs(knownBeacons) do
+        if beaconData ~= nil then
+            if distance(vec2(beaconData.x, beaconData.y), vec2(x, y)) <= maxDistance then
+                TradeBeacon.sendInfoToShip(x, y, shipId, caller, beaconData.tradeData)
+            end
         end
     end
 end
-callable(nil, "getTradingData")
+callable(nil, "registerTradingShip")
 
+function TradeBeacon.deregisterTradingShip(shipId)
+    knownTradingShips[shipId] = nil
+    TradeBeacon.sync()
+end
+callable(nil, "deregisterTradingShip")

@@ -15,7 +15,7 @@ self.data = {time = 24 * 60 * 60}
 defineSyncFunction("data", self)
 
 function TradeBeacon.getUpdateInterval()
-    return 60
+    return 10
 end
 
 function TradeBeacon.interactionPossible()
@@ -25,26 +25,27 @@ end
 function TradeBeacon.initialize()
     if onClient() then
         self.sync()
+    else
+        TradeBeacon.registerWithPlayer()
     end
-end
-
-function TradeBeacon.initializationFinished()
-    local entity = Entity()
-    local x, y = Sector():getCoordinates()
-    TradeBeacon.registerWithPlayer(x, y, entity.index)
 end
 
 function TradeBeacon.initUI()
     ScriptUI():registerInteraction("Close"%_t, "")
 end
 
-function TradeBeacon.registerWithPlayer(x, y, entityId)
-    print ("updating trade beacon entity server")
-    Player(getParentFaction().index):invokeFunction("data/scripts/player/tradebeacon.lua", "storeTradingData", x, y, entityId)
+function TradeBeacon.registerWithPlayer()
+    local entityId = Entity().index.string
+    local x, y = Sector():getCoordinates()
+    local tradeData = TradeBeacon.getTradeData()
+    local script = "tradebeacon.lua"
+    Player(getParentFaction().index):invokeFunction(script, "registerTradeBeacon", x, y, entityId, tradeData)
 end
 
-function TradeBeacon.unregisterWithPlayer(entityId)
-    Player(getParentFaction().index):invokeFunction("data/scripts/player/tradebeacon.lua", "removeTradingData", entityId)
+function TradeBeacon.unregisterWithPlayer()
+    local entityId = Entity().index.string
+    local script = "tradebeacon.lua"
+    Player(getParentFaction().index):invokeFunction(script, "deregisterTradeBeacon", entityId)
 end
 
 function TradeBeacon.updateServer(timeStep)
@@ -63,11 +64,11 @@ function TradeBeacon.updateServer(timeStep)
     if self.data.time <= 0 then
         getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Normal, [[Your trade beacon in sector \s(%1%:%2%) burnt out!]]%_T, x, y)
         getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Warning, [[Your trade beacon in sector \s(%1%:%2%) burnt out!]]%_T, x, y)
-        TradeBeacon.unregisterWithPlayer(entity.index)
+        TradeBeacon.unregisterWithPlayer()
         entity:destroy(entity.index, DamageType.Decay)
         terminate()
     else
-        TradeBeacon.registerWithPlayer(x, y, entity.index)
+        TradeBeacon.registerWithPlayer()
     end
 end
 
@@ -106,8 +107,7 @@ function TradeBeacon.serializeItem(item)
     item.stationIndex = item.stationIndex.string
 end
 
-function TradeBeacon.sendRouteInfoTo(x, y, entityId)
-    entityId = Uuid(entityId)
+function TradeBeacon.getTradeData()
     local sellable, buyable = TradingUtility.detectBuyableAndSellableGoods()
 
     for _, d in ipairs(sellable) do
@@ -116,8 +116,5 @@ function TradeBeacon.sendRouteInfoTo(x, y, entityId)
     for _, d in ipairs(buyable) do
         TradeBeacon.serializeItem(d)
     end
-    local sectorData = serialize({sellable = sellable, buyable = buyable})
-
-    invokeRemoteEntityFunction(x, y, "", entityId, "data/scripts/systems/tradingoverview.lua", "receiveTradingInfoFromBeacon", sectorData)
+    return serialize({sellable = sellable, buyable = buyable})
 end
-callable(TradeBeacon, "sendRouteInfoTo")

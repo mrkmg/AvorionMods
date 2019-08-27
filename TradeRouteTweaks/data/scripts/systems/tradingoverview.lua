@@ -158,9 +158,6 @@ function refreshRoutesUI()
 
 
             for j, offer in pairs({route.buyable, route.sellable}) do
-
-                printTable (offer)
-
                 routePriceLabels[index][j].caption = createMonetaryString(offer.price)
                 routeStationLabels[index][j].caption = offer.station%_t % offer.titleArgs
                 routeCoordLabels[index][j].caption = tostring(offer.coords)
