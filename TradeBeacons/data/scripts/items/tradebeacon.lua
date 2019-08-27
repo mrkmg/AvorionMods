@@ -46,6 +46,23 @@ function getPrice(rarity, seed)
     return getInt(1000, 5000)
 end
 
+function getMaterial(rarity)
+    if rarity.level == 2 then
+        return Material(MaterialType.Titanium)
+    elseif rarity.level == 3 then
+        return Material(MaterialType.Naonite)
+    elseif rarity.level == 4 then
+        return Material(MaterialType.Trinium)
+    elseif rarity.level == 5 then
+        return Material(MaterialType.Xanion)
+    elseif rarity.level == 6 then
+        return Material(MaterialType.Ogonite)
+    elseif rarity.level == 7 then
+        return Material(MaterialType.Avorion)
+    end
+    return Material(MaterialType.Iron)
+end
+
 function create(item, rarity, seed)
     item.stackable = true
     item.depleteOnUse = true
@@ -68,10 +85,10 @@ function create(item, rarity, seed)
     tooltip:addLine(line)
 
     -- empty line
-    local line = TooltipLine(14, 14)
+    line = TooltipLine(14, 14)
     tooltip:addLine(line)
 
-    local line = TooltipLine(18, 14)
+    line = TooltipLine(18, 14)
     line.ltext = "Time"%_t
     line.rtext = "${t}h"%_t%{t = getLifespan(rarity)}
     line.icon = "data/textures/icons/recharge-time.png"
@@ -79,25 +96,25 @@ function create(item, rarity, seed)
     tooltip:addLine(line)
 
     -- empty line
-    local line = TooltipLine(14, 14)
+    line = TooltipLine(14, 14)
     tooltip:addLine(line)
 
-    local line = TooltipLine(18, 14)
+    line = TooltipLine(18, 14)
     line.ltext = "Can be deployed by the player."%_t
     tooltip:addLine(line)
 
-    local line = TooltipLine(14, 14)
+    line = TooltipLine(14, 14)
     tooltip:addLine(line)
 
-    local line = TooltipLine(18, 14)
+    line = TooltipLine(18, 14)
     line.ltext = "Deploy this satellite in a sector"%_t
     tooltip:addLine(line)
 
-    local line = TooltipLine(18, 14)
+    line = TooltipLine(18, 14)
     line.ltext = "to allow ships with advanced"%_t
     tooltip:addLine(line)
 
-    local line = TooltipLine(18, 14)
+    line = TooltipLine(18, 14)
     line.ltext = "trading system to scan for routes."%_t
     tooltip:addLine(line)
 
@@ -112,7 +129,7 @@ local function getPositionInFront(craft, distance)
     local right = position.right
     local dir = position.look
     local up = position.up
-    local position = craft.translationf
+    position = craft.translationf
 
     local pos = position + dir * (craft.radius + distance)
 
@@ -146,8 +163,9 @@ function activate(item)
     )
 
     local faction = Faction(craft.factionIndex)
-    local plan = PlanGenerator.makeStationPlan(faction)
-    plan:forceMaterial(Material(MaterialType.Iron))
+    local plan = PlanGenerator.makeBeaconPlan(faction)
+
+    plan:forceMaterial(getMaterial(item.rarity))
 
     local s = 15 / plan:getBoundingSphere().radius
     plan:scale(vec3(s, s, s))
