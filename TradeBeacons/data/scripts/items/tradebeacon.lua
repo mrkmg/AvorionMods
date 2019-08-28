@@ -62,6 +62,8 @@ end
 function create(item, rarity, seed)
     item.stackable = true
     item.depleteOnUse = true
+    item.dropable = true
+    item.tradeable = true
     item.name = "Trade Beacon"%_t
     item.price = getPrice(rarity, seed)
     item.icon = "data/textures/icons/satellite.png"
