@@ -4,7 +4,7 @@ meta =
     -- ID of your mod; Make sure this is unique!
     -- Will be used for identifying the mod in dependency lists
     -- Will be changed to workshop ID (ensuring uniqueness) when you upload the mod to the workshop
-    id = "",
+    id = "1847245795",
 
     -- Name of your mod; You may want this to be unique, but it's not absolutely necessary.
     -- This is an additional helper attribute for you to easily identify your mod in the Mods() list
@@ -14,7 +14,7 @@ meta =
     title = "Trade Beacons",
 
     -- Description of your mod that will be displayed to players
-    description = "A new way to build trade routes.\n\nAdds Trade Beacons and changes the trading systems to use those instead of a sector jump memory.\\Purchase Trade Beacons at Equipment Docks",
+    description = "A new way to build trade routes.\n\nAdds Trade Beacons and changes the trading systems to use those instead of a sector jump memory.\nPurchase Trade Beacons at Equipment Docks",
 
     -- Insert all authors into this list
     authors = {"Kevin Gravier (MrKMG)"},
@@ -39,8 +39,8 @@ meta =
     --      {id = "OptionalMod", min = "0.2", optional = true}, -- we support OptionalMod optionally, starting at version 0.2
     -- },
     dependencies = {
-        {id = "Avorion", max = "0.25.2"},
         {id = "1841868691", min = "1.0", optional = true},
+        {id = "Avorion", min = "0.25", max = "0.26"}
     },
 
     -- Set to true if the mod only has to run on the server. Clients will get notified that the mod is running on the server, but they won't download it to themselves
@@ -51,7 +51,7 @@ meta =
 
     -- Set to true if the mod changes the savegame in a potentially breaking way, as in it adds scripts or mechanics that get saved into database and no longer work once the mod gets disabled
     -- logically, if a mod is client-side only, it can't alter savegames, but Avorion doesn't check for that at the moment
-    saveGameAltering = false,
+    saveGameAltering = true,
 
     -- Contact info for other users to reach you in case they have questions
     contact = "",

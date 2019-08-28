@@ -71,6 +71,13 @@ function TradeBeacon.updateServer(timeStep)
         Entity():destroy(Entity().index, DamageType.Decay)
         terminate()
     else
+        local timeReminaingHours = math.floor(burnOutTime / 60 / 60)
+        if timeReminaingHours > 0 then
+            Entity().title = "Trade Beacon (${timeReminaingHours}h)"%_T%{timeReminaingHours = timeReminaingHours }
+        else
+            local timeRemainingMinutes = math.floor(burnOutTime / 60)
+            Entity().title = "Trade Beacon (${timeRemainingMinutes}m)"%_T%{timeRemainingMinutes = timeRemainingMinutes }
+        end
         TradeBeacon.registerWithPlayer()
         didSendInfoOnce = true
     end

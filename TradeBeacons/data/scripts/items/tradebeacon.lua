@@ -5,59 +5,55 @@ local PlanGenerator = include("plangenerator")
 include("stringutility")
 
 function getLifespan(rarity)
-    if rarity.value == 1 then
-        return 8
+    if rarity.value == 0 then
+        return 1
+    elseif rarity.value == 1 then
+        return 2
     elseif rarity.value == 2 then
-        return 12
+        return 4
     elseif rarity.value == 3 then
-        return 16
+        return 8
     elseif rarity.value == 4 then
-        return 20
+        return 16
     elseif rarity.value == 5 then
-        return 24
-    elseif rarity.value == 6 then
-        return 36
-    elseif rarity.value == 7 then
-        return 48
+        return 32
     end
 
-    return 2
+    return 0.5
 end
 
 function getPrice(rarity, seed)
     math.randomseed(seed)
 
-    if rarity.value == 1 then
+    if rarity.value == 0 then
         return getInt(5000, 10000)
-    elseif rarity.value == 2 then
+    elseif rarity.value == 1 then
         return getInt(15000, 20000)
-    elseif rarity.value == 3 then
+    elseif rarity.value == 2 then
         return getInt(50000, 70000)
+    elseif rarity.value == 3 then
+        return getInt(300000, 400000)
     elseif rarity.value == 4 then
-        return getInt(100000, 140000)
-    elseif rarity.value == 5 then
-        return getInt(300000, 350000)
-    elseif rarity.value == 6 then
         return getInt(1000000, 1500000)
-    elseif rarity.value == 7 then
-        return getInt(10000000, 20000000)
+    elseif rarity.value == 5 then
+        return getInt(5000000, 8000000)
     end
 
     return getInt(1000, 5000)
 end
 
 function getMaterial(rarity)
-    if rarity.value == 2 then
+    if rarity.value == 0 then
         return Material(MaterialType.Titanium)
-    elseif rarity.value == 3 then
+    elseif rarity.value == 1 then
         return Material(MaterialType.Naonite)
-    elseif rarity.value == 4 then
+    elseif rarity.value == 2 then
         return Material(MaterialType.Trinium)
-    elseif rarity.value == 5 then
+    elseif rarity.value == 3 then
         return Material(MaterialType.Xanion)
-    elseif rarity.value == 6 then
+    elseif rarity.value == 4 then
         return Material(MaterialType.Ogonite)
-    elseif rarity.value == 7 then
+    elseif rarity.value == 5 then
         return Material(MaterialType.Avorion)
     end
     return Material(MaterialType.Iron)
@@ -77,11 +73,16 @@ function create(item, rarity, seed)
 
     local title = "Trade Beacon"%_t
 
-    local headLineSize = 25
-    local headLineFontSize = 15
-    local line = TooltipLine(headLineSize, headLineFontSize)
+    -- head line
+    local line = TooltipLine(25, 15)
     line.ctext = title
-    line.ccolor = item.rarity.color
+    line.ccolor = rarity.color
+    tooltip:addLine(line)
+
+    -- rarity name
+    line = TooltipLine(5, 12)
+    line.ctext = tostring(rarity)
+    line.ccolor = rarity.color
     tooltip:addLine(line)
 
     -- empty line
@@ -107,15 +108,15 @@ function create(item, rarity, seed)
     tooltip:addLine(line)
 
     line = TooltipLine(18, 14)
-    line.ltext = "Deploy this satellite in a sector"%_t
+    line.ltext = "Deploy this satellite to allow"%_t
     tooltip:addLine(line)
 
     line = TooltipLine(18, 14)
-    line.ltext = "to allow ships with advanced"%_t
+    line.ltext = "ships with an advanced trading"%_t
     tooltip:addLine(line)
 
     line = TooltipLine(18, 14)
-    line.ltext = "trading system to scan for routes."%_t
+    line.ltext = "system to scan this sector."%_t
     tooltip:addLine(line)
 
     item:setTooltip(tooltip)

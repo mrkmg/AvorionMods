@@ -80,16 +80,16 @@ end
 
 function getTradeBeaconScanRange(seed, rarity)
     if rarity.value == 2 then
-        return 5
+        return 10
     elseif rarity.value >= 3 then
         math.randomseed(seed)
 
         if rarity.value == 5 then
-            return getInt(21, 40)
+            return getInt(61, 80)
         elseif rarity.value == 4 then
-            return getInt(11, 20)
+            return getInt(41, 60)
         elseif rarity.value == 3 then
-            return getInt(6, 10)
+            return getInt(21, 40)
         end
     end
 
