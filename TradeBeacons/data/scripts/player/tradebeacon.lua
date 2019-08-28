@@ -5,24 +5,45 @@ local TradeBeaconSerializer = include ("tradebeaconserializer")
 
 --namespace TradeBeacon
 TradeBeacon = {}
-
 local knownBeacons = {}
 
-function TradeBeacon.registerTradeBeacon(x, y, beaconId, sectorDataString)
-    if onServer() then
-        local sectorData = TradeBeaconSerializer.deserializeSectorData(sectorDataString)
-        knownBeacons[beaconId] = {x = x, y = y, sectorData = sectorData}
+if onServer() then
+    function TradeBeacon.secure()
+        return {
+            knownBeacons = knownBeacons
+        }
     end
-end
 
-function TradeBeacon.deregisterTradeBeacon(beaconId)
-    if onServer() then
+    function TradeBeacon.restore(data)
+        if data ~= nil and data.knownBeacons ~= nil then
+            knownBeacons = data.knownBeacons
+        end
+    end
+
+    function getUpdateInterval()
+        return 30
+    end
+
+    function updateServer(timeStep)
+        for beaconId, beaconData in pairs(knownBeacons) do
+            beaconData.burnOutTime = beaconData - timeStep
+
+            if beaconData.burnOutTime < 0 then
+                TradeBeacon.deregisterTradeBeacon(beaconId)
+            end
+        end
+    end
+
+    function TradeBeacon.registerTradeBeacon(x, y, beaconId, sectorDataString, burnOutTime)
+        local sectorData = TradeBeaconSerializer.deserializeSectorData(sectorDataString)
+        knownBeacons[beaconId] = {x = x, y = y, sectorData = sectorData, burnOutTime = burnOutTime}
+    end
+
+    function TradeBeacon.deregisterTradeBeacon(beaconId)
         knownBeacons[beaconId] = nil
     end
-end
 
-function TradeBeacon.requestSectorsData(x, y, maxDistance, shipId, caller)
-    if onServer() then
+    function TradeBeacon.requestSectorsData(x, y, maxDistance, shipId, caller)
         local sectorsData = {}
 
         for _, beaconData in pairs(knownBeacons) do

@@ -59,6 +59,14 @@ function getMaterial(rarity)
     return Material(MaterialType.Iron)
 end
 
+function getTraderAffinity(rarity)
+    if rarity.value <= 0 then
+        return 0
+    end
+
+    return rarity.value / 100
+end
+
 function create(item, rarity, seed)
     item.stackable = true
     item.depleteOnUse = true
@@ -177,6 +185,7 @@ function activate(item)
     desc:setMovePlan(plan)
     desc.factionIndex = craft.factionIndex
     desc:setValue("lifespan", getLifespan(item.rarity))
+    desc:setValue("traderAffinity", getTraderAffinity(item.rarity))
 
     local satellite = Sector():createEntity(desc)
     satellite:addScript("entity/tradebeacon.lua")

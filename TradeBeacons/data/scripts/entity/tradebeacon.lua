@@ -11,6 +11,8 @@ local TradeBeaconSerializer = include ("tradebeaconserializer")
 TradeBeacon = {}
 
 local burnOutTime
+local traderAffinity = 0
+local didWarnOfBurnOut = false
 
 defineSyncFunction("data", TradeBeacon)
 
@@ -29,8 +31,34 @@ end
 function TradeBeacon.initialize()
     if onServer() then
         burnOutTime = Entity():getValue("lifespan") * 60 * 60
+
+        Sector():registerCallback("onEntityEntered", "onEntityEnteredSector")
     end
 end
+
+function TradeBeacon.onEntityEnteredSector(index)
+    local entity = Entity(index)
+    if not valid(entity) then
+        return
+    end
+
+    local scripts = entity:getScripts()
+    local isTrader = false
+    for _, name in pairs(scripts) do
+        --Fix for path issues on windows
+        local fixedName = string.gsub(name, "\\", "/")
+        if string.match(fixedName, "data/scripts/entity/merchants/travellingmerchant.lua") then
+            isTrader = true
+            break
+        end
+    end
+
+    if isTrader then
+        getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Normal, [[Your trade beacon in sector \s(%1%:%2%) detected a travelling merchant!]]%_T, x, y)
+        getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Warning, [[Your trade beacon in sector \s(%1%:%2%) detected a travelling merchant!]]%_T, x, y)
+    end
+end
+callable(TradeBeacon, "onEntityEnteredSector")
 
 function TradeBeacon.initUI()
     ScriptUI():registerInteraction("Close"%_t, "")
@@ -41,7 +69,7 @@ function TradeBeacon.registerWithPlayer()
     local x, y = Sector():getCoordinates()
     local tradeData = TradeBeacon.getTradeData()
     local script = "tradebeacon.lua"
-    Player(getParentFaction().index):invokeFunction(script, "registerTradeBeacon", x, y, entityId, tradeData)
+    Player(getParentFaction().index):invokeFunction(script, "registerTradeBeacon", x, y, entityId, tradeData, burnOutTime)
 end
 
 function TradeBeacon.unregisterWithPlayer()
@@ -56,6 +84,39 @@ function TradeBeacon.getTradeData()
     return TradeBeaconSerializer.serializeSectorData({sellable = sellable, buyable = buyable})
 end
 
+function TradeBeacon.updateServerDischarged()
+    local x, y = Sector():getCoordinates()
+    getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Normal, [[Your trade beacon in sector \s(%1%:%2%) burnt out!]]%_T, x, y)
+    getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Warning, [[Your trade beacon in sector \s(%1%:%2%) burnt out!]]%_T, x, y)
+    TradeBeacon.unregisterWithPlayer()
+    Entity():destroy(Entity().index, DamageType.Decay)
+    terminate()
+
+end
+
+function TradeBeacon.updateServerCharged()
+    TradeBeacon.registerWithPlayer()
+    didSendInfoOnce = true
+
+    local timeReminaingHours = math.floor(burnOutTime / 60 / 60)
+    if timeReminaingHours > 0 then
+        Entity().title = "Trade Beacon (${timeReminaingHours}h)"%_T%{timeReminaingHours = timeReminaingHours }
+    else
+        local timeRemainingMinutes = math.floor(burnOutTime / 60)
+        Entity().title = "Trade Beacon (${timeRemainingMinutes}m)"%_T%{timeRemainingMinutes = timeRemainingMinutes }
+
+        if not didWarnOfBurnOut and timeRemainingMinutes < 10 then
+            local x, y = Sector():getCoordinates()
+            getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Normal, [[Your trade beacon in sector \s(%1%:%2%) will burn out in %3% minutes]]%_T, x, y, timeRemainingMinutes)
+            getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Warning, [[Your trade beacon in sector \s(%1%:%2%) will burn out in %3% minutes]]%_T, x, y, timeRemainingMinutes)
+        end
+    end
+
+    if traderAffinity > 0 and random():getFloat() < traderAffinity then
+        Sector():addScriptOnce("data/scripts/player/spawntravellingmerchant.lua")
+    end
+end
+
 function TradeBeacon.updateServer(timeStep)
     if burnOutTime == nil then
         return
@@ -63,23 +124,10 @@ function TradeBeacon.updateServer(timeStep)
 
     burnOutTime = burnOutTime - timeStep
 
-    local x, y = Sector():getCoordinates()
     if burnOutTime <= 0 then
-        getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Normal, [[Your trade beacon in sector \s(%1%:%2%) burnt out!]]%_T, x, y)
-        getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Warning, [[Your trade beacon in sector \s(%1%:%2%) burnt out!]]%_T, x, y)
-        TradeBeacon.unregisterWithPlayer()
-        Entity():destroy(Entity().index, DamageType.Decay)
-        terminate()
+        TradeBeacon.updateServerDischarged()
     else
-        local timeReminaingHours = math.floor(burnOutTime / 60 / 60)
-        if timeReminaingHours > 0 then
-            Entity().title = "Trade Beacon (${timeReminaingHours}h)"%_T%{timeReminaingHours = timeReminaingHours }
-        else
-            local timeRemainingMinutes = math.floor(burnOutTime / 60)
-            Entity().title = "Trade Beacon (${timeRemainingMinutes}m)"%_T%{timeRemainingMinutes = timeRemainingMinutes }
-        end
-        TradeBeacon.registerWithPlayer()
-        didSendInfoOnce = true
+        TradeBeacon.updateServerCharged()
     end
 end
 
@@ -93,13 +141,23 @@ function TradeBeacon.updateClient(timeStep)
 end
 
 function TradeBeacon.secure()
-    return {burnOutTime = burnOutTime}
+    return {
+        burnOutTime = burnOutTime,
+        traderAffinity = traderAffinity,
+        didWarnOfBurnOut = didWarnOfBurnOut,
+    }
 end
 
 function TradeBeacon.restore(data)
     data = data or {}
     if data.burnOutTime ~= nil then
         burnOutTime = data.burnOutTime
+    end
+    if data.traderAffinity then
+        traderAffinity = data.traderAffinity
+    end
+    if data.didWarnOfBurnOut then
+        didWarnOfBurnOut = didWarnOfBurnOut
     end
 end
 
