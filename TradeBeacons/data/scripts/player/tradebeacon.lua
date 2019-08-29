@@ -9,24 +9,43 @@ local knownBeacons = {}
 
 if onServer() then
     function TradeBeacon.secure()
+        local knownBeaconsCopy = {}
+        for beaconId,beaconData in pairs(knownBeacons) do
+            if beaconData ~= nil then
+                knownBeaconsCopy[beaconId] = {
+                    x = beaconData.x,
+                    y = beaconData.y,
+                    burnOutTime = beaconData.burnOutTime,
+                    sectorData = TradeBeaconSerializer.serializeSectorData(beaconData.sectorData),
+                }
+            end
+        end
         return {
-            knownBeacons = knownBeacons
+            knownBeacons = knownBeaconsCopy
         }
     end
 
     function TradeBeacon.restore(data)
         if data ~= nil and data.knownBeacons ~= nil then
-            knownBeacons = data.knownBeacons
+            knownBeacons = {}
+            for beaconId, beaconData in pairs(data.knownBeacons) do
+                knownBeacons[beaconId] = {
+                    x = beaconData.x,
+                    y = beaconData.y,
+                    burnOutTime = beaconData.burnOutTime,
+                    sectorData = TradeBeaconSerializer.deserializeSectorData(beaconData.sectorData),
+                }
+            end
         end
     end
 
-    function getUpdateInterval()
+    function TradeBeacon.getUpdateInterval()
         return 30
     end
 
-    function updateServer(timeStep)
+    function TradeBeacon.updateServer(timeStep)
         for beaconId, beaconData in pairs(knownBeacons) do
-            beaconData.burnOutTime = beaconData - timeStep
+            beaconData.burnOutTime = beaconData.burnOutTime - timeStep
 
             if beaconData.burnOutTime < 0 then
                 TradeBeacon.deregisterTradeBeacon(beaconId)

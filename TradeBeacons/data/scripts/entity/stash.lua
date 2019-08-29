@@ -17,41 +17,12 @@ function receiveUtility(faction)
     faction:getInventory():add(utility)
 end
 
+local TradeBeacon_claim = claim
 function claim()
-
-    local receiver, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.AddItems, AlliancePrivilege.AddResources)
-    if not receiver then return end
-
-    local dist = ship:getNearestDistance(Entity())
-    if dist > 20.0 then
-        player:sendChatMessage("", ChatMessageType.Error, "You're not close enough to open the object."%_t)
-        return
-    end
-
-    terminate()
-
-    receiveMoney(receiver)
-
-    if random():getFloat() < 0.5 then
-        receiveTurret(receiver)
-    else
-        receiveUpgrade(receiver)
-    end
-
-    if random():getFloat() < 0.5 then
-        if random():getFloat() < 0.5 then
-            receiveTurret(receiver)
-        else
-            receiveUpgrade(receiver)
-        end
-    end
+    TradeBeacon_claim()
 
     if random():getFloat() < 0.5 then
         receiveUtility(receiver)
-    end
-
-    if random():getFloat() < 0.05 then
-        receiver:getInventory():add(UsableInventoryItem("unbrandedreconstructiontoken.lua", Rarity(RarityType.Legendary)))
     end
 end
 callable(nil, "claim")

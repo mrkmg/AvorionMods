@@ -1,3 +1,4 @@
+include ("utility")
 local TradeBeaconSerializer = {}
 
 local function serializeTradeGood(tradeGood)
@@ -48,6 +49,7 @@ local function deserializeSectorData(sectorData)
 end
 
 function TradeBeaconSerializer.serializeSectorData(sectorData)
+    sectorData = table.deepcopy(sectorData)
     serializeSectorData(sectorData)
     return serialize(sectorData)
 end
@@ -59,6 +61,7 @@ function TradeBeaconSerializer.deserializeSectorData(sectorDataString)
 end
 
 function TradeBeaconSerializer.serializeSectorsData(sectorsData)
+    sectorsData = table.deepcopy(sectorsData)
     for _, sectorData in ipairs(sectorsData) do
         serializeSectorData(sectorData)
     end

@@ -8,11 +8,10 @@ function UtilityMerchant.shop:addItems(...)
     local madeSystems = 0
     local x, y = Sector():getCoordinates()
     local rarities, weights = UpgradeGenerator.getSectorProbabilities(x, y)
-    local seed = Seed(appTimeMs())
 
     repeat
         local rarity = rarities[selectByWeight(random(), weights)]
-        local item = UsableInventoryItem("tradebeacon.lua", rarity, seed)
+        local item = UsableInventoryItem("tradebeacon.lua", rarity, Seed(appTimeMs()))
 
         UtilityMerchant.add(item, getInt(1, 15 - rarity.value))
         madeSystems = madeSystems + 1

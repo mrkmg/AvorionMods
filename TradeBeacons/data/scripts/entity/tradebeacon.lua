@@ -69,7 +69,18 @@ function TradeBeacon.registerWithPlayer()
     local x, y = Sector():getCoordinates()
     local tradeData = TradeBeacon.getTradeData()
     local script = "tradebeacon.lua"
-    Player(getParentFaction().index):invokeFunction(script, "registerTradeBeacon", x, y, entityId, tradeData, burnOutTime)
+    local faction = getParentFaction()
+    if faction.isPlayer then
+        Player(faction.index):invokeFunction(script, "registerTradeBeacon", x, y, entityId, tradeData, burnOutTime)
+    elseif faction.isAlliance then
+        local alliance = Alliance(faction.index)
+        local players = {Server():getOnlinePlayers()}
+        for _, player in pairs(players) do
+            if alliance:contains(player.index) then
+                player:invokeFunction(script, "registerTradeBeacon", x, y, entityId, tradeData, burnOutTime)
+            end
+        end
+    end
 end
 
 function TradeBeacon.unregisterWithPlayer()

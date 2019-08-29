@@ -97,13 +97,15 @@ function getTradeBeaconScanRange(seed, rarity)
 end
 
 function requestSectorsData(caller)
+    if not caller then
+        return
+    end
+
     local entityId = Entity().index.string
     local x, y = Sector():getCoordinates()
     local script = "tradebeacon.lua"
-    local faction = getParentFaction()
-    if faction.isPlayer then -- check just to make sure
-        Player(faction.index):invokeFunction(script, "requestSectorsData", x, y, historySize, entityId, caller)
-    end
+
+    Player(caller):invokeFunction(script, "requestSectorsData", x, y, historySize, entityId, caller)
 end
 
 function receiveTradingInfoFromPlayer(caller, sectorsDataString)
