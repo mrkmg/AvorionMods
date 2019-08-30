@@ -13,12 +13,13 @@ TradeBeacon = {}
 local burnOutTime
 local traderAffinity = 0
 local didWarnOfBurnOut = false
+local didSendInfoOnce = false
 
 defineSyncFunction("data", TradeBeacon)
 
 function TradeBeacon.getUpdateInterval()
     if didSendInfoOnce then
-        return 60
+        return 120
     else
         return 1
     end
@@ -38,31 +39,12 @@ function TradeBeacon.initialize()
 end
 
 function TradeBeacon.onRestoredFromDisk(time)
-    local x, y = Sector():getCoordinates()
-    print ("Beacon from disk: ",x, y, time)
-    burnOutTime = burnOutTime + time
+    TradeBeacon.updateServer(time)
 end
 
 function TradeBeacon.onEntityEnteredSector(index)
     local entity = Entity(index)
-    if not valid(entity) then
-        return
-    end
-
-    local scripts = entity:getScripts()
-    local isTrader = false
-    for _, name in pairs(scripts) do
-        --Fix for path issues on windows
-        local fixedName = string.gsub(name, "\\", "/")
-        if string.match(fixedName, "data/scripts/entity/merchants/travellingmerchant.lua") then
-            isTrader = true
-            break
-        end
-    end
-
-    print ("Is Trader!")
-
-    if isTrader then
+    if valid(entity) and entity:hasScript("travellingmerchant.lua") then
         getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Normal, [[Your trade beacon in sector \s(%1%:%2%) detected a travelling merchant!]]%_T, x, y)
         getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Warning, [[Your trade beacon in sector \s(%1%:%2%) detected a travelling merchant!]]%_T, x, y)
     end

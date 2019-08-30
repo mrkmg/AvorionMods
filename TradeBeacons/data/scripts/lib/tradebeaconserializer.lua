@@ -76,7 +76,6 @@ function TradeBeaconSerializer.deserializeSectorsData(sectorsDataString)
     return sectorsData
 end
 
-
 --------------------------------------------------------------------------------
 -- Serialize an object into a source code string. This string, when passed as
 -- an argument to loadstring()(), returns an object structurally identical
