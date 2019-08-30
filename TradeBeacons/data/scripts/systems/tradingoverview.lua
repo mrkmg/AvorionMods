@@ -12,10 +12,15 @@ function onSectorChanged() end
 
 function onInstalled(seed, rarity, permanent)
     historySize = getTradeBeaconScanRange(seed, rarity)
+    Entity():setValue("beaconScanRange", historySize)
 
     if onServer() then
         tradingData = SimpleBuffer()
     end
+end
+
+function onUninstalled()
+
 end
 
 function getData()

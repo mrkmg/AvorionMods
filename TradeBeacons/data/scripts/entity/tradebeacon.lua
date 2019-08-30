@@ -33,7 +33,14 @@ function TradeBeacon.initialize()
         burnOutTime = Entity():getValue("lifespan") * 60 * 60
 
         Sector():registerCallback("onEntityEntered", "onEntityEnteredSector")
+        Sector():registerCallback("onRestoredFromDisk", "onRestoredFromDisk")
     end
+end
+
+function TradeBeacon.onRestoredFromDisk(time)
+    local x, y = Sector():getCoordinates()
+    print ("Beacon from disk: ",x, y, time)
+    burnOutTime = burnOutTime + time
 end
 
 function TradeBeacon.onEntityEnteredSector(index)
@@ -53,6 +60,8 @@ function TradeBeacon.onEntityEnteredSector(index)
         end
     end
 
+    print ("Is Trader!")
+
     if isTrader then
         getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Normal, [[Your trade beacon in sector \s(%1%:%2%) detected a travelling merchant!]]%_T, x, y)
         getParentFaction():sendChatMessage("Trade Beacon"%_T, ChatMessageType.Warning, [[Your trade beacon in sector \s(%1%:%2%) detected a travelling merchant!]]%_T, x, y)
@@ -68,13 +77,13 @@ function TradeBeacon.getPlayersToNotify()
     local faction = getParentFaction()
     local playersToAlert = {}
     if faction.isPlayer then
-        table.insert(Player(faction.index))
+        table.insert(playersToAlert, Player(faction.index))
     elseif faction.isAlliance then
         local alliance = Alliance(faction.index)
         local players = {Server():getOnlinePlayers()}
         for _, player in pairs(players) do
             if alliance:contains(player.index) then
-                table.insert(player)
+                table.insert(playersToAlert, player)
             end
         end
     end
@@ -132,9 +141,8 @@ function TradeBeacon.updateServerDischarged()
 end
 
 function TradeBeacon.updateServerCharged()
+    TradeBeacon.updateTitle()
     TradeBeacon.registerWithPlayer()
-
-
 
     if traderAffinity > 0 and random():getFloat() < traderAffinity then
         Sector():addScriptOnce("data/scripts/player/spawntravellingmerchant.lua")
@@ -143,11 +151,12 @@ end
 
 function TradeBeacon.updateServer(timeStep)
     if burnOutTime == nil then
-        return
+        burnOutTime = 0
     end
 
     burnOutTime = burnOutTime - timeStep
-
+    local x, y = Sector():getCoordinates()
+    print ("Beacon updated:   ", x, y, timeStep)
     if burnOutTime <= 0 then
         TradeBeacon.updateServerDischarged()
     else

@@ -7,6 +7,27 @@ local TradeBeaconSerializer = include ("tradebeaconserializer")
 TradeBeacon = {}
 local knownBeacons = {}
 
+if onClient() then
+    function TradeBeacon.initialize()
+        local player = Player()
+        player:registerCallback("onSelectMapCoordinates", "onSelectMapCoordinates")
+        player:registerCallback("onMapRenderAfterUI", "onMapRenderAfterUI")
+    end
+
+    function TradeBeacon.onSelectMapCoordinates()
+        -- show beacons
+    end
+
+    function TradeBeacon.onMapRenderAfterUI()
+        local craft = Player().craft
+
+        if craft:hasScript("tradingoverview.lua") then
+            -- show range, somehow
+
+        end
+    end
+end
+
 if onServer() then
     function TradeBeacon.secure()
         local knownBeaconsCopy = {}
@@ -17,7 +38,7 @@ if onServer() then
                     y = beaconData.y,
                     burnOutTime = beaconData.burnOutTime,
                     sectorData = TradeBeaconSerializer.serializeSectorData(beaconData.sectorData),
-                    timeSinceCheckin = beaconData.timeSinceCheckin
+                    lastSeen = beaconData.lastSeen,
                 }
             end
         end
@@ -33,29 +54,31 @@ if onServer() then
                 knownBeacons[beaconId] = {
                     x = beaconData.x,
                     y = beaconData.y,
-                    burnOutTime = beaconData.burnOutTime,
+                    burnOutTime = beaconData.burnOutTime or 0,
                     sectorData = TradeBeaconSerializer.deserializeSectorData(beaconData.sectorData),
-                    timeSinceCheckin = beaconData.timeSinceCheckin
+                    lastSeen = beaconData.lastSeen or 0,
                 }
             end
         end
     end
 
     function TradeBeacon.getUpdateInterval()
-        return 60
+        return 10
     end
 
     function TradeBeacon.updateServer(timeStep)
         for beaconId, beaconData in pairs(knownBeacons) do
             beaconData.burnOutTime = beaconData.burnOutTime - timeStep
-            beaconData.timeSinceCheckin = beaconData.timeSinceCheckin + timeStep
+            beaconData.lastSeen = beaconData.lastSeen + timeStep
 
             local isBeaconBurnedOut = beaconData.burnOutTime <= 0
-            local isBeaconStale = beaconData.timeSinceCheckin > 5 * 60
+            local isBeaconStale = beaconData.lastSeen > 5 * 60
             local isBeaconInWarningPeriod = beaconData.burnOutTime <= 10 * 60 and beaconData.burnOutTime >= 9 * 60
 
             if (isBeaconBurnedOut or isBeaconStale or isBeaconInWarningPeriod) and not Galaxy():sectorLoaded(beaconData.x, beaconData.y) then
+                print ("Loading Sector:     ", beaconData.x, beaconData.y)
                 Galaxy():loadSector(beaconData.x, beaconData.y)
+                break -- break to prevent too many sectors being loaded at once
             end
 
             -- if beacon is over a minute old, and has not deregistered itself, force it out of the cache
@@ -72,7 +95,7 @@ if onServer() then
             y = y,
             sectorData = sectorData,
             burnOutTime = burnOutTime,
-            timeSinceCheckin = 0
+            lastSeen = 0
         }
     end
 
@@ -104,5 +127,6 @@ if onServer() then
             )
         end
     end
+
 end
 
