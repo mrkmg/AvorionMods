@@ -1,3 +1,6 @@
+-- TradeRouteTweaks
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
 
 local routeStockLabels = {}
 local routeBackButton

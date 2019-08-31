@@ -1,4 +1,6 @@
--- LootOrder - by Kevin Gravier (MrKMG)
+-- LootOrder
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
 
 MapRoutes.registerModdedMapRoute(OrderType.Loot, {
     orderDescriptionFunction = "lootDescription",

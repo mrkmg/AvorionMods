@@ -1,4 +1,6 @@
--- CraftOrdersLib - by Kevin Gravier (MrKMG)
+-- CraftOrdersLib
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
 
 function registerModdedOrderType(name, definition)
     if OrderType[name] == nil then

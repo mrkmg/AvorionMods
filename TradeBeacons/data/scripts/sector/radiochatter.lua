@@ -1,3 +1,7 @@
+-- TradeBeacons
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
+
 if onClient() then
     table.insert(self.GeneralShipChatter,"My new trading system allows me to use my trade beacons from so far away!"%_t)
     table.insert(self.GeneralShipChatter,"Can someone go check my trade beacons? They just burned out."%_t)

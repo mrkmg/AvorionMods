@@ -1,3 +1,6 @@
+-- TradeBeacons
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
 
 package.path = package.path .. ";data/scripts/systems/?.lua"
 package.path = package.path .. ";data/scripts/lib/?.lua"

@@ -1,6 +1,8 @@
 -- Fleet Jump through Gate Command Mod by MassCraxx
 -- v3
--- made compatible with CraftOrdersLib by Kevin Gravier (MrKMG)
+-- Modified by
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
 
 include ("ordertypes")
 

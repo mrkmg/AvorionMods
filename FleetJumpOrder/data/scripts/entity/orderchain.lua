@@ -1,5 +1,8 @@
 -- Fleet Jump through Gate Command Mod by MassCraxx
 -- v3
+-- Modified by
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
 
 function OrderChain.replaceCurrent(order)
     if OrderChain.activeOrder == 0 then

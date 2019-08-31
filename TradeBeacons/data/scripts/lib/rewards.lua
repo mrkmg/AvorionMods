@@ -1,3 +1,7 @@
+-- TradeBeacons
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
+
 local UtilityGenerator = include ("utilitygenerator")
 
 function Rewards.standard(player, faction, msg, money, reputation, turret, system)

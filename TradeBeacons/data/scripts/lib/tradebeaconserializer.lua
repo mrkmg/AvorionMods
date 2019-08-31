@@ -1,3 +1,7 @@
+-- TradeBeacons
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
+
 include ("utility")
 local TradeBeaconSerializer = {}
 

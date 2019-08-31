@@ -1,3 +1,7 @@
+-- TradeBeacons
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
+
 local Queue = {}
 Queue.__index = Queue
 

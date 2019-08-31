@@ -1,3 +1,7 @@
+-- TradeBeacons
+-- by Kevin Gravier (MrKMG)
+-- MIT License 2019
+
 local UpgradeGenerator = include("upgradegenerator")
 
 local TradeBeacons_UtilityMerchant_ship_addItems = UtilityMerchant.shop.addItems
