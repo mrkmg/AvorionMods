@@ -19,10 +19,6 @@ function onInstalled(seed, rarity, permanent)
     end
 end
 
-function onUninstalled()
-
-end
-
 function getData()
     local sellable, buyable = gatherData()
 

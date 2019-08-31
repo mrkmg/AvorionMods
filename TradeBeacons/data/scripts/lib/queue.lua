@@ -4,33 +4,36 @@ Queue.__index = Queue
 local function new(comparer)
     return setmetatable({
         data = {},
-        index = 1,
-        last = 0,
+        nextIndex = 1,
+        lastIndex = 0,
+        count = 0,
         comparer = comparer
     }, Queue)
 end
 
 function Queue:insert(element)
-    self.last = self.last + 1
-    self.data[self.last] = element
+    self.lastIndex = self.lastIndex + 1
+    self.data[self.lastIndex] = element
+    self.count = self.count + 1
 end
 
 function Queue:next()
-    if self.index > self.last then
+    if self.nextIndex > self.lastIndex then
         return nil
     end
-    local item = self.data[self.index]
-    self.data[self.index] = nil
-    self.index = self.index + 1
+    local item = self.data[self.nextIndex]
+    self.data[self.nextIndex] = nil
+    self.nextIndex = self.nextIndex + 1
+    self.count = self.count - 1
     return item
 end
 
 function Queue:length()
-    return self.last - self.index + 1
+    return self.count
 end
 
 function Queue:isEmpty()
-    return self:length() > 0
+    return self.count == 0
 end
 
 function Queue:contains(element)

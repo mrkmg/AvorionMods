@@ -16,5 +16,4 @@ function UtilityMerchant.shop:addItems(...)
         UtilityMerchant.add(item, getInt(1, 15 - rarity.value))
         madeSystems = madeSystems + 1
     until madeSystems == numSystems
-
 end

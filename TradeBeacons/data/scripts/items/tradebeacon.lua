@@ -1,45 +1,32 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
-local PlanGenerator = include("plangenerator")
-include("stringutility")
+include ("stringutility")
+include ("randomext")
 
 function getLifespan(rarity)
     if rarity.value == 0 then
         return 1
     elseif rarity.value == 1 then
-        return 2
+        return 1.5
     elseif rarity.value == 2 then
-        return 4
+        return 2
     elseif rarity.value == 3 then
-        return 8
+        return 3
     elseif rarity.value == 4 then
-        return 16
+        return 5
     elseif rarity.value == 5 then
-        return 32
+        return 8
     end
 
     return 0.5
 end
 
 function getPrice(rarity, seed)
+    local lifeSpan = getLifespan(rarity)
     math.randomseed(seed)
-
-    if rarity.value == 0 then
-        return getInt(5000, 10000)
-    elseif rarity.value == 1 then
-        return getInt(15000, 20000)
-    elseif rarity.value == 2 then
-        return getInt(50000, 70000)
-    elseif rarity.value == 3 then
-        return getInt(300000, 400000)
-    elseif rarity.value == 4 then
-        return getInt(1000000, 1500000)
-    elseif rarity.value == 5 then
-        return getInt(5000000, 8000000)
-    end
-
-    return getInt(1000, 5000)
+    local lowEnd = 20000 * lifeSpan * lifeSpan
+    return getInt(lowEnd, lowEnd + lowEnd * 0.25)
 end
 
 function getMaterial(rarity)
@@ -146,7 +133,6 @@ local function getPositionInFront(craft, distance)
 end
 
 function activate(item)
-
     local craft = Player().craft
     if not craft then return false end
 
@@ -171,15 +157,21 @@ function activate(item)
             ComponentType.EnergySystem
     )
 
-    local plan = PlanGenerator.makeBeaconPlan()
+    local plan = LoadPlanFromFile("data/plans/TradeBeacon.xml")
 
     plan:forceMaterial(getMaterial(item.rarity))
 
     local s = 15 / plan:getBoundingSphere().radius
     plan:scale(vec3(s, s, s))
+
+    local color = ColorRGB(getFloat(0.25, 1), getFloat(0.25, 1), getFloat(0.25, 1))
+    for i = 41,64 do
+        plan:setBlockColor(i, color)
+    end
+
     plan.accumulatingHealth = true
 
-    desc.position = getPositionInFront(craft, 20)
+    desc.position = getPositionInFront(craft, 50)
     desc:setMovePlan(plan)
     desc.factionIndex = craft.factionIndex
     desc:setValue("lifespan", getLifespan(item.rarity))
@@ -187,6 +179,5 @@ function activate(item)
 
     local satellite = Sector():createEntity(desc)
     satellite:addScript("entity/tradebeacon.lua")
-
     return true
 end
