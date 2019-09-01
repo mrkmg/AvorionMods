@@ -8,7 +8,10 @@ package.path = package.path .. ";data/scripts/?.lua"
 include ("stringutility")
 include ("randomext")
 
-function getLifespan(rarity)
+-- namespace TradeBeacon
+TradeBeacon = {}
+
+function TradeBeacon.getLifespan(rarity)
     if rarity.value == 0 then
         return 1
     elseif rarity.value == 1 then
@@ -26,14 +29,14 @@ function getLifespan(rarity)
     return 0.5
 end
 
-function getPrice(rarity, seed)
-    local lifeSpan = getLifespan(rarity)
+function TradeBeacon.getPrice(rarity, seed)
+    local lifeSpan = TradeBeacon.getLifespan(rarity)
     math.randomseed(seed)
     local lowEnd = 20000 * lifeSpan * lifeSpan
     return getInt(lowEnd, lowEnd + lowEnd * 0.25)
 end
 
-function getMaterial(rarity)
+function TradeBeacon.getMaterial(rarity)
     if rarity.value == 0 then
         return Material(MaterialType.Titanium)
     elseif rarity.value == 1 then
@@ -50,7 +53,7 @@ function getMaterial(rarity)
     return Material(MaterialType.Iron)
 end
 
-function getTraderAffinity(rarity)
+function TradeBeacon.getTraderAffinity(rarity)
     if rarity.value <= 0 then
         return 0
     end
@@ -58,11 +61,11 @@ function getTraderAffinity(rarity)
     return rarity.value / 100
 end
 
-function create(item, rarity, seed)
+function TradeBeacon.create(item, rarity, seed)
     item.stackable = true
     item.depleteOnUse = true
     item.name = "Trade Beacon"%_t
-    item.price = getPrice(rarity, seed)
+    item.price = TradeBeacon.getPrice(rarity, seed)
     item.icon = "data/textures/icons/satellite.png"
     item.rarity = rarity
     item:setValue("subtype", "TradeBeacon")
@@ -90,7 +93,7 @@ function create(item, rarity, seed)
 
     line = TooltipLine(18, 14)
     line.ltext = "Time"%_t
-    line.rtext = "${t}h"%_t%{t = getLifespan(rarity)}
+    line.rtext = "${t}h"%_t%{t = TradeBeacon.getLifespan(rarity)}
     line.icon = "data/textures/icons/recharge-time.png"
     line.iconColor = ColorRGB(0.8, 0.8, 0.8)
     tooltip:addLine(line)
@@ -136,34 +139,31 @@ local function getPositionInFront(craft, distance)
     return MatrixLookUpPosition(right, up, pos)
 end
 
-function activate(item)
-    local craft = Player().craft
-    if not craft then return false end
-
+function TradeBeacon.realActivate(craft, item)
     local desc = EntityDescriptor()
     desc:addComponents(
-            ComponentType.Plan,
-            ComponentType.BspTree,
-            ComponentType.Intersection,
-            ComponentType.Asleep,
-            ComponentType.DamageContributors,
-            ComponentType.BoundingSphere,
-            ComponentType.BoundingBox,
-            ComponentType.Velocity,
-            ComponentType.Physics,
-            ComponentType.Scripts,
-            ComponentType.ScriptCallback,
-            ComponentType.Title,
-            ComponentType.Owner,
-            ComponentType.Durability,
-            ComponentType.PlanMaxDurability,
-            ComponentType.InteractionText,
-            ComponentType.EnergySystem
+        ComponentType.Plan,
+        ComponentType.BspTree,
+        ComponentType.Intersection,
+        ComponentType.Asleep,
+        ComponentType.DamageContributors,
+        ComponentType.BoundingSphere,
+        ComponentType.BoundingBox,
+        ComponentType.Velocity,
+        ComponentType.Physics,
+        ComponentType.Scripts,
+        ComponentType.ScriptCallback,
+        ComponentType.Title,
+        ComponentType.Owner,
+        ComponentType.Durability,
+        ComponentType.PlanMaxDurability,
+        ComponentType.InteractionText,
+        ComponentType.EnergySystem
     )
 
     local plan = LoadPlanFromFile("data/plans/TradeBeacon.xml")
 
-    plan:forceMaterial(getMaterial(item.rarity))
+    plan:forceMaterial(TradeBeacon.getMaterial(item.rarity))
 
     local s = 15 / plan:getBoundingSphere().radius
     plan:scale(vec3(s, s, s))
@@ -178,10 +178,26 @@ function activate(item)
     desc.position = getPositionInFront(craft, 50)
     desc:setMovePlan(plan)
     desc.factionIndex = craft.factionIndex
-    desc:setValue("lifespan", getLifespan(item.rarity))
-    desc:setValue("traderAffinity", getTraderAffinity(item.rarity))
+    desc:setValue("lifespan", TradeBeacon.getLifespan(item.rarity))
+    desc:setValue("traderAffinity", TradeBeacon.getTraderAffinity(item.rarity))
 
     local satellite = Sector():createEntity(desc)
     satellite:addScript("entity/tradebeacon.lua")
+    local velocity = Velocity(satellite.index)
+    velocity:addVelocity(craft.look * 5)
     return true
+end
+
+function TradeBeacon.remoteActivate(item)
+    local craft = Entity()
+    if not valid(craft) then return false end
+
+    return TradeBeacon.realActivate(craft, item)
+end
+
+function TradeBeacon.activate(item)
+    local craft = Player().craft
+    if not craft then return false end
+
+    return TradeBeacon.realActivate(craft, item)
 end

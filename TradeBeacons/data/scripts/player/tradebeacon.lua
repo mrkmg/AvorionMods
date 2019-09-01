@@ -5,9 +5,9 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 
 include ("utility")
+local Azimuth = include ("azimuthlib-basic")
 local TradeBeaconSerializer = include ("tradebeaconserializer")
 local Queue = include ("queue")
-local CONFIG_maxBeaconStaleTime = 5 * 60 -- 5 minute
 
 --namespace TradeBeacon
 TradeBeacon = {}
@@ -22,9 +22,7 @@ end
 
 function TradeBeacon.sync(data)
     if onServer() then
-        if callingPlayer then
-            invokeClientFunction(Player(callingPlayer), "sync", TradeBeacon.secure())
-        end
+        invokeClientFunction(Player(), "sync", TradeBeacon.secure())
     else
         if data then
             TradeBeacon.restore(data)
@@ -73,13 +71,8 @@ end
 if onClient() then
     function TradeBeacon.initialize()
         local player = Player()
-        player:registerCallback("onShowGalaxyMap", "onShowGalaxyMap")
         player:registerCallback("onMapRenderAfterLayers", "onMapRenderAfterLayers")
         player:registerCallback("onMapRenderAfterUI", "onMapRenderAfterUI")
-    end
-
-    function TradeBeacon.onShowGalaxyMap()
-        TradeBeacon.sync()
     end
 
     function TradeBeacon.onMapRenderAfterUI()
@@ -209,6 +202,17 @@ if onServer() then
 
     local toLoadSectors = Queue(sectorComparer)
 
+    local configOptions = {
+        _version = {default = "1.3", comment = "DO NOT TOUCH THIS."},
+        minimumSectorLoadDelay = {default = 15, min = 1, comment = "[Seconds] [Per Player] Minimum time between sector loads for refreshing stale trading data."},
+        staleTradingDataTime = {default = 300, min = 1, comment = "[Seconds] [Per Beacon] Time since last checkin to queue for a load"},
+        timeUntilBeaconIsLost = {default = 600, min = 1, comment = "[Seconds] [Per Beacon] Time since last check to remove from database. (happens if beacon is destroyed unexpectedly)"}
+    }
+    local serverConfig, isModified = Azimuth.loadConfig("TradeBeacons", configOptions)
+    if isModified then
+        Azimuth.saveConfig("TradeBeacons", serverConfig, configOptions)
+    end
+
     function TradeBeacon.initialize()
         Player():registerCallback("onRestoredFromDisk", "onRestoredFromDisk")
     end
@@ -218,12 +222,13 @@ if onServer() then
     end
 
     function TradeBeacon.getUpdateInterval()
-        return 15
+        return serverConfig.minimumSectorLoadDelay
     end
 
     function TradeBeacon.updateServer(timeStep)
         TradeBeacon.updateKnownBeacons(timeStep)
         TradeBeacon.loadNextSector()
+        TradeBeacon.sync()
     end
 
     function TradeBeacon.loadNextSector()
@@ -248,7 +253,7 @@ if onServer() then
         beaconData.burnOutTime = beaconData.burnOutTime - timeStep
         beaconData.lastSeen = beaconData.lastSeen + timeStep
 
-        if beaconData.lastSeen > 600 then -- 10 min
+        if beaconData.lastSeen > serverConfig.timeUntilBeaconIsLost then -- 10 min
             knownBeacons[beaconId] = nil
             return
         end
@@ -258,8 +263,7 @@ if onServer() then
         end
 
         local isBeaconBurnedOut = beaconData.burnOutTime <= 0
-        local isBeaconStale = beaconData.lastSeen > CONFIG_maxBeaconStaleTime
-
+        local isBeaconStale = beaconData.lastSeen > serverConfig.staleTradingDataTime
 
         if (isBeaconBurnedOut or isBeaconStale) and not Galaxy():sectorLoaded(beaconData.x, beaconData.y) then
             TradeBeacon.debug("TradeBeacons:", "Queueing Load of Sector", beaconData.x, beaconData.y)
@@ -276,6 +280,7 @@ if onServer() then
             burnOutTime = burnOutTime,
             lastSeen = 0
         }
+        TradeBeacon.sync()
     end
 
     function TradeBeacon.deregisterTradeBeacon(beaconId)
