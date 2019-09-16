@@ -52,8 +52,6 @@ end
 function TransferCargo.updateServer(timeStep)
     if didInit == false then return end
     
-    print ("TCAI.updateServer", targetEntity)
-    
     if not TransferCargo.hasCaptain() then
         ShipAI():setPassive()
         terminate()
@@ -83,7 +81,7 @@ function TransferCargo.updateServer(timeStep)
       return
     end
     
-    if entity:getNearestDistance(targetEntity) > 40 then
+    if entity:getNearestDistance(targetEntity) > 50 then
       ShipAI():setStatus("Flying to ${name} /* ship AI status*/"%_T%{name = targetEntity.name}, {})
       ShipAI():setFly(targetEntity.translationf, 0)
       return 
@@ -95,7 +93,6 @@ function TransferCargo.updateServer(timeStep)
     local cargos = entity:getCargos()
     
     for good,count in pairs(cargos) do
-      print (good.name, count)
       local transferVolume = math.min(count * good.size, targetEntity.freeCargoSpace)
       local transferAmount = math.floor(transferVolume / good.size)
       if transferAmount < 1 then
