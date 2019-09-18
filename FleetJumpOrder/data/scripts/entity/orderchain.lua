@@ -67,8 +67,6 @@ function OrderChain.addLoop(a, b)
         if not owner then return end
     end
 
---    print ("addLoop " .. tostring(a) .. " " .. tostring(b))
-
     local loopIndex
     if a and not b then
         -- interpret as action index

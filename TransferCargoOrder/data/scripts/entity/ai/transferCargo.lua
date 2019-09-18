@@ -60,38 +60,31 @@ function TransferCargo.hasCaptain()
     return true
 end
 
+local stuckCounter = 0
 function TransferCargo.setState()
-    local dist = Entity():getNearestDistance(targetEntity)
-
-    if dist < 50 then
-        state = States.Transferring
-        return
-    end
-
-    if state == States.Init then
-        state = States.Flying
-        return
-    end
-
-    if state ~= States.Flying and dist > 500 then
-        state = States.Init
+    if state == States.Finished then
+        terminiate()
         return
     end
 
     local ai = ShipAI();
 
-    if state == States.Flying and ai.isStuck then
-        if dist < 500 then
-            state = States.Closing
-        else
+    if ai.isStuck then
+        stuckCounter = stuckCounter + 1
+        if stuckCounter >= 3 then
             state = States.Stuck
         end
-        return
-    end
-
-    if state == States.Closing and ai.isStuck then
-        state = States.Stuck
-        return
+    else
+        stuckCounter = 0
+        local dist = Entity():getNearestDistance(targetEntity)
+        if dist < 50 then
+            state = States.Transferring
+            return
+        elseif dist < 200 then
+            state = States.Closing
+        else
+            state = States.Flying
+        end
     end
 end
 
@@ -127,6 +120,7 @@ function TransferCargo.run()
             entity:removeCargo(good, transferAmount)
         end
         state = States.Finished
+        terminate()
     end
 end
 
