@@ -20,24 +20,24 @@ function onInstalled(seed, rarity, permanent)
 
     if onServer() then
         tradingData = SimpleBuffer()
+        if historySize > 1 then
+            local sellable, buyable = gatherData()
+            tradingData:insert({sellable = sellable, buyable = buyable})
+            requestSectorsData()
+        end
     end
 end
 
 function getData()
     local sellable, buyable = gatherData()
 
-    if onServer() then
-        tradingData = SimpleBuffer()
-    end
-
-    if callingPlayer and historySize > 1 then
+    if historySize > 1 then
         lastSellable = sellable
         lastBuyable = buyable
         requestSectorsData(callingPlayer)
-    end
-
-    if tradingData then
-        tradingData:insert({sellable = sellable, buyable = buyable})
+        -- by convention last element of tradingData is the current sector
+        -- so let's update it
+        tradingData[tradingData.last] = {sellable = sellable, buyable = buyable}
         updateTradingRoutes()
     end
 
@@ -102,7 +102,39 @@ function getTradeBeaconScanRange(seed, rarity)
 end
 
 function requestSectorsData(caller)
-    if not caller then
+    local player
+    if caller then
+        -- triggered by player interaction so we can be specific
+        player = Player(caller)
+    elseif onServer() then
+        local faction = getParentFaction()
+        if faction.isPlayer then
+            -- only one choice for the player
+            player = Player(faction.index)
+        elseif faction.isAlliance then
+            -- TODO: maybe we can pick one in a more principled way?
+            --  or maybe trade beacons should be registering themselves with
+            --  trading systems instead of players?
+
+            local alliance = Alliance(faction.index)
+            local players = {Server():getOnlinePlayers()}
+            for _, p in pairs(players) do
+                if alliance:contains(p.index) then
+                    player = p
+                    break
+                end
+            end
+            if not player then
+                -- no player is logged in, so we don't have anywhere to get the
+                -- data from, no-op
+                return
+            end
+        else
+            -- faction isn't a player or alliance, no-op
+            return
+        end
+    else
+        -- no caller and not on server, this is unexpected, so no-op
         return
     end
 
@@ -110,20 +142,24 @@ function requestSectorsData(caller)
     local x, y = Sector():getCoordinates()
     local script = "tradebeacon.lua"
 
-    Player(caller):invokeFunction(script, "requestSectorsData", x, y, historySize, entityId, caller)
+    player:invokeFunction(script, "requestSectorsData", x, y, historySize, entityId, caller)
 end
 
 function receiveTradingInfoFromPlayer(caller, sectorsDataString)
-    if not caller then
-        return
-    end
-
     local sectorsData = TradeBeaconSerializer.deserializeSectorsData(sectorsDataString)
-
+    -- clear out tradingData and populate
+    tradingData = SimpleBuffer()
     for _, sectorData in ipairs(sectorsData) do
         tradingData:insert(sectorData)
     end
 
+    local sellable, buyable = gatherData()
+    tradingData:insert({sellable = sellable, buyable = buyable})
+
     updateTradingRoutes()
-    invokeClientFunction(Player(caller), "setData", lastSellable, lastBuyable, routes)
+
+    if caller then
+        -- callback triggered by player interaction, so update their data
+        invokeClientFunction(Player(caller), "setData", lastSellable, lastBuyable, routes)
+    end
 end
