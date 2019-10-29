@@ -142,7 +142,7 @@ function requestSectorsData(caller)
     local x, y = Sector():getCoordinates()
     local script = "tradebeacon.lua"
 
-    player:invokeFunction(script, "requestSectorsData", x, y, historySize, entityId, caller)
+    invokeRemoteFactionFunction(player.index, script, "requestSectorsData", x, y, historySize, entityId, caller)
 end
 
 function receiveTradingInfoFromPlayer(caller, sectorsDataString)
