@@ -88,7 +88,7 @@ function TradeBeacon.registerWithPlayer()
     local tradeData = TradeBeacon.getTradeData()
     local script = "tradebeacon.lua"
     for _, player in pairs(TradeBeacon.getPlayersToNotify()) do
-        player:invokeFunction(script, "registerTradeBeacon", x, y, entityId, tradeData, burnOutTime)
+        invokeRemoteFactionFunction(player.index, script, "registerTradeBeacon", x, y, entityId, tradeData, burnOutTime)
     end
     didSendInfoOnce = true
 end
@@ -97,7 +97,7 @@ function TradeBeacon.unregisterWithPlayer()
     local entityId = Entity().index.string
     local script = "tradebeacon.lua"
     for _, player in pairs(TradeBeacon.getPlayersToNotify()) do
-        player:invokeFunction(script, "deregisterTradeBeacon", entityId)
+        invokeRemoteFactionFunction(player.index, script, "deregisterTradeBeacon", entityId)
     end
 end
 
@@ -140,7 +140,7 @@ function TradeBeacon.updateServerCharged()
     TradeBeacon.registerWithPlayer()
 
     if traderAffinity ~= nil and traderAffinity > 0 and random():getFloat() < traderAffinity then
-        Sector():addScriptOnce("data/scripts/player/spawntravellingmerchant.lua")
+        Sector():addScriptOnce("data/scripts/player/events/spawntravellingmerchant.lua")
     end
 end
 
