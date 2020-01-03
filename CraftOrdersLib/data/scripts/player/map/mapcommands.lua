@@ -13,14 +13,25 @@ end
 if onClient() then
 
 MapCommands.windows = {}
+MapCommands.lockedWindows = {}
 
 function MapCommands.addWindow(window)
-	table.insert(MapCommands.windows, window)
+	MapCommands.windows[window.index] = window
+end
+
+function MapCommands.lockWindow(window)
+	MapCommands.lockedWindows[window.index] = window
+end
+
+function MapCommands.unlockWindow(window)
+	MapCommands.lockedWindows[window.index] = nil
 end
 
 function MapCommands.hideWindows()
-	for _, window in ipairs(MapCommands.windows) do
-		window:hide()
+	for idx, window in pairs(MapCommands.windows) do
+		if not MapCommands.lockedWindows[idx] then
+			window:hide()
+		end
 	end
 end
 
