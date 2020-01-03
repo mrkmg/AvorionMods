@@ -12,14 +12,14 @@ end
 
 if onClient() then
 
-local windows = {}
+MapCommands.windows = {}
 
 function MapCommands.addWindow(window)
-	windows[#windows + 1] = window
+	table.insert(MapCommands.windows, window)
 end
 
 function MapCommands.hideWindows()
-	for _, window in pairs(windows) do
+	for _, window in ipairs(MapCommands.windows) do
 		window:hide()
 	end
 end
@@ -141,7 +141,9 @@ function MapCommands.initUI()
 	for _, window in pairs(windows) do
         window.showCloseButton = 1
         window.moveable = 1
+		MapCommands.addWindow(window)
 	end
+	
 	MapCommands.hideWindows()
 end
 
