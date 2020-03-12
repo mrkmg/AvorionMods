@@ -12,6 +12,29 @@ end
 
 if onClient() then
 
+MapCommands.windows = {}
+MapCommands.lockedWindows = {}
+
+function MapCommands.addWindow(window)
+	MapCommands.windows[window.index] = window
+end
+
+function MapCommands.lockWindow(window)
+	MapCommands.lockedWindows[window.index] = window
+end
+
+function MapCommands.unlockWindow(window)
+	MapCommands.lockedWindows[window.index] = nil
+end
+
+function MapCommands.hideWindows()
+	for idx, window in pairs(MapCommands.windows) do
+		if not MapCommands.lockedWindows[idx] then
+			window:hide()
+		end
+	end
+end
+
 function MapCommands.initUI()
 
     shipsContainer = GalaxyMap():createContainer()
@@ -125,11 +148,52 @@ function MapCommands.initUI()
 
 
     -- all windows
-    for _, window in pairs({buyWindow, sellWindow, escortWindow}) do
+	windows = { buyWindow, sellWindow, escortWindow }
+	for _, window in pairs(windows) do
         window.showCloseButton = 1
         window.moveable = 1
-        window:hide()
-    end
+		MapCommands.addWindow(window)
+	end
+	
+	MapCommands.hideWindows()
+end
+
+function MapCommands.hideOrderButtons()
+	for _, button in pairs(orderButtons) do
+		button:hide()
+	end
+	MapCommands.hideWindows()
+end
+
+function MapCommands.onEscortPressed()
+	enqueueNextOrder = MapCommands.isEnqueueing()
+	
+	MapCommands.fillEscortCombo()
+	
+	MapCommands.hideWindows()
+	escortWindow:show()
+end
+
+function MapCommands.onBuyGoodsPressed()
+	enqueueNextOrder = MapCommands.isEnqueueing()
+	
+	buyFilterTextBox:clear()
+	buyAmountTextBox:clear()
+	MapCommands.fillTradeCombo(buyCombo)
+	
+	MapCommands.hideWindows()
+	buyWindow:show()
+end
+
+function MapCommands.onSellGoodsPressed()
+	enqueueNextOrder = MapCommands.isEnqueueing()
+	
+	sellFilterTextBox:clear()
+	sellAmountTextBox:clear()
+	MapCommands.fillTradeCombo(sellCombo)
+	
+	MapCommands.hideWindows()
+	sellWindow:show()
 end
 
 function MapCommands.updateButtonLocations()
