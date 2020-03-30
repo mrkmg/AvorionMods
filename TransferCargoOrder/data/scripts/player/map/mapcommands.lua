@@ -104,6 +104,7 @@ function MapCommands.onTransferCargoWindowOKButtonPressed()
 
     MapCommands.clearOrdersIfNecessary(not enqueueNextOrder) -- clear if not enqueueing
     MapCommands.enqueueOrder("addTransferCargoOrder", factionIndex, craftName)
+    if not enqueueNextOrder then MapCommands.runOrders() end
 
     transferCargoWindow:hide()
 end

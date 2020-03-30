@@ -4,24 +4,24 @@ meta =
     -- ID of your mod; Make sure this is unique!
     -- Will be used for identifying the mod in dependency lists
     -- Will be changed to workshop ID (ensuring uniqueness) when you upload the mod to the workshop
-    id = "1865044252",
+    id = "1871981076",
 
     -- Name of your mod; You may want this to be unique, but it's not absolutely necessary.
     -- This is an additional helper attribute for you to easily identify your mod in the Mods() list
-    name = "TransferCargoOrder",
+    name = "MiningSalvagingFix",
 
     -- Title of your mod that will be displayed to players
-    title = "Transfer Cargo Order",
+    title = "Mining and Salvaging Fix",
 
     -- Description of your mod that will be displayed to players
-    description = "Adds new order to have one craft unload its cargo to another craft",
+    description = "Tweaks the AI for Mining and Salvaging to fix the issue of them stopping work when there is still work to be done in Avorion version 0.26.1.",
 
     -- Insert all authors into this list
     authors = {"Kevin Gravier (MrKMG)"},
 
     -- Version of your mod, should be in format 1.0.0 (major.minor.patch) or 1.0 (major.minor)
     -- This will be used to check for unmet dependencies or incompatibilities
-    version = "1.5",
+    version = "1.0",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:
@@ -39,12 +39,11 @@ meta =
     --      {id = "OptionalMod", min = "0.2", optional = true}, -- we support OptionalMod optionally, starting at version 0.2
     -- },
     dependencies = {
-        {id = "1837703287", min = "1.1"},
-        {id = "Avorion", min = "1.0", max = "1.0"}
+        {id = "Avorion", exact = "0.26.1"}
     },
 
     -- Set to true if the mod only has to run on the server. Clients will get notified that the mod is running on the server, but they won't download it to themselves
-    serverSideOnly = false,
+    serverSideOnly = true,
 
     -- Set to true if the mod only has to run on the client, such as UI mods
     clientSideOnly = false,

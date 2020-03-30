@@ -32,6 +32,7 @@ callable(OrderChain, "addTransferCargoOrder")
 
 function OrderChain.startTransferCargo(order)
     Entity():invokeFunction("data/scripts/entity/craftorders.lua", "transferCargo", order.targetIndex)
+    Entity():invokeFunction("data/scripts/entity/orderchain.lua", "runOrders")
 end
 
 function OrderChain.transferCargoFinished(order)

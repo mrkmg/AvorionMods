@@ -23,7 +23,7 @@ local LootComponentLevels = {}
 LootComponentLevels[ComponentType.SystemUpgradeLoot] = LootLevels.High
 LootComponentLevels[ComponentType.TurretLoot] = LootLevels.High
 LootComponentLevels[ComponentType.MoneyLoot] = LootLevels.Medium
-LootComponentLevels[ComponentType.ColorLoot] = LootLevels.Medium
+--LootComponentLevels[ComponentType.ColorLoot] = LootLevels.Medium
 LootComponentLevels[ComponentType.CargoLoot] = LootLevels.Low
 LootComponentLevels[ComponentType.ResourceLoot] = LootLevels.Low
 LootComponentLevels[ComponentType.CrewLoot] = LootLevels.Low
@@ -32,7 +32,7 @@ local LootComponentNames = {}
 LootComponentNames[ComponentType.SystemUpgradeLoot] = "System"
 LootComponentNames[ComponentType.TurretLoot] = "Turret"
 LootComponentNames[ComponentType.MoneyLoot] = "Credits"
-LootComponentNames[ComponentType.ColorLoot] = "Color"
+--LootComponentNames[ComponentType.ColorLoot] = "Color"
 LootComponentNames[ComponentType.CargoLoot] = "Cargo"
 LootComponentNames[ComponentType.ResourceLoot] = "Resource"
 LootComponentNames[ComponentType.CrewLoot] = "Crew"
@@ -41,7 +41,7 @@ local LootComponentNeedsCargo = {}
 LootComponentNeedsCargo[ComponentType.SystemUpgradeLoot] = false
 LootComponentNeedsCargo[ComponentType.TurretLoot] = false
 LootComponentNeedsCargo[ComponentType.MoneyLoot] = false
-LootComponentNeedsCargo[ComponentType.ColorLoot] = false
+--LootComponentNeedsCargo[ComponentType.ColorLoot] = false
 LootComponentNeedsCargo[ComponentType.CargoLoot] = true
 LootComponentNeedsCargo[ComponentType.ResourceLoot] = true
 LootComponentNeedsCargo[ComponentType.CrewLoot] = false
@@ -81,6 +81,7 @@ function AILoot.hasCaptain()
 end
 
 function AILoot.updateServer(timeStep)
+    print("Running Loop updateServer")
     if not AILoot.hasCaptain() then
         ShipAI():setPassive()
         terminate()

@@ -44,8 +44,6 @@ function OrderChain.lootOrderFinished(order)
         return true
     end
 
-
-
     if persistent then
         return false 
     end

@@ -13,4 +13,5 @@ MapCommands.registerModdedMapCommand(OrderType.Loot, {
 function MapCommands.onLootPressed() 
     MapCommands.clearOrdersIfNecessary()
     MapCommands.enqueueOrder("addLootOrder")
+    if not enqueueNextOrder then MapCommands.runOrders() end
 end

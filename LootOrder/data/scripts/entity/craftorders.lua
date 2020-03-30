@@ -16,6 +16,7 @@ function CraftOrders.onUserLootOrder()
 
     Entity():invokeFunction("data/scripts/entity/orderchain.lua", "clearAllOrders")
     Entity():invokeFunction("data/scripts/entity/orderchain.lua", "addLootOrder", true)
+    Entity():invokeFunction("data/scripts/entity/orderchain.lua", "runOrders")
 end
 callable(CraftOrders, "onUserLootOrder")
 
