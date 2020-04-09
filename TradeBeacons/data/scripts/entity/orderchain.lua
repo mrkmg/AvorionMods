@@ -45,6 +45,7 @@ function OrderChain.addDropTradeBeaconOrder()
         if OrderChain.canEnchain(order) then
             OrderChain.enchain(order)
         end
+        Entity():invokeFunction("data/scripts/entity/orderchain.lua", "runOrders")
     else
         Player():sendChatMessage("Order"%_T, ChatMessageType.Warning, [[No access to any Trade Beacons]]%_T)
     end

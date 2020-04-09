@@ -13,6 +13,9 @@ meta =
     -- Title of your mod that will be displayed to players
     title = "Craft Orders Lib",
 
+    -- Type of your mod, either "mod" or "factionpack"
+    type = "mod",
+
     -- Description of your mod that will be displayed to players
     description = "Library to allow multiple mods to add orders for crafts",
 
@@ -40,7 +43,7 @@ meta =
     -- },
     dependencies = {
         {id = "1751540023", exact = "0.0", incompatible = true},
-        {id = "Avorion", min = "1.0.0", max = "1.0.0"}
+        {id = "Avorion", exact = "1.0"}
     },
 
     -- Set to true if the mod only has to run on the server. Clients will get notified that the mod is running on the server, but they won't download it to themselves

@@ -304,7 +304,7 @@ if onServer() then
 
         if #sectorsData > 0 then
             local sectorsDataString = TradeBeaconSerializer.serializeSectorsData(sectorsData)
-            invokeRemoteEntityFunction(
+            invokeEntityFunction(
                 x, y, nil, Uuid(shipId),
                 "tradingoverview.lua", "receiveTradingInfoFromPlayer",
                 caller, sectorsDataString

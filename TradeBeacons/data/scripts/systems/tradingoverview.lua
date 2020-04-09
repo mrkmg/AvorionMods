@@ -51,36 +51,94 @@ callable(nil, "getData")
 
 function getTooltipLines(seed, rarity, permanent)
     local lines = {}
-
-    if seePrices(seed, rarity) then
-        table.insert(lines, {ltext = "Display prices of goods"%_t, icon = "data/textures/icons/sell.png"})
-    end
-    if seePriceFactors(seed, rarity) then
-        table.insert(lines, {ltext = "Display price ratios of goods"%_t, icon = "data/textures/icons/sell.png"})
-    end
+    local bonuses = {}
 
     local tradeBeaconRange = getTradeBeaconScanRange(seed, rarity)
+    local economyRange = getEconomyRange(seed, rarity, true)
+
+    local toYesNo = function(line, value)
+        if value then
+            line.rtext = "Yes"%_t
+            line.rcolor = ColorRGB(0.3, 1.0, 0.3)
+        else
+            line.rtext = "No"%_t
+            line.rcolor = ColorRGB(1.0, 0.3, 0.3)
+        end
+    end
+
+    table.insert(lines, {ltext = "Prices of Goods"%_t, icon = "data/textures/icons/sell.png"})
+    toYesNo(lines[#lines], seePrices(seed, rarity))
+
+    table.insert(lines, {ltext = "Price Deviations"%_t, icon = "data/textures/icons/sell.png"})
+    toYesNo(lines[#lines], seePriceFactors(seed, rarity))
+
+    table.insert(lines, {ltext = "Trade Route Detection"%_t, icon = "data/textures/icons/sell.png"})
+    toYesNo(lines[#lines], tradeBeaconRange > 0)
+
+    if economyRange > 1 then
+        table.insert(lines, {ltext = "Economy Overview (Galaxy Map)"%_t, icon = "data/textures/icons/histogram.png", boosted = (permanent and economyRange > 0)})
+        toYesNo(lines[#lines], permanent and economyRange > 1)
+    elseif economyRange == 1 then
+        table.insert(lines, {ltext = "Economy Overview (local)"%_t, icon = "data/textures/icons/histogram.png", boosted = (permanent and economyRange > 0)})
+        toYesNo(lines[#lines], permanent and economyRange > 0)
+    elseif economyRange == 0 then
+        table.insert(lines, {ltext = "Economy Overview"%_t, icon = "data/textures/icons/histogram.png", boosted = (permanent and economyRange > 0)})
+        toYesNo(lines[#lines], permanent and economyRange > 0)
+    end
+
+    if economyRange > 0 or tradeBeaconRange > 0 then
+        table.insert(lines, {})
+    end
+
+    if economyRange > 0 then
+        if permanent then
+            table.insert(lines, {ltext = "Economy Scan Range"%_t, rtext = tostring(economyRange), icon = "data/textures/icons/histogram.png", boosted = permanent})
+        else
+
+            if economyRange > 1 then
+                table.insert(bonuses, {ltext = "Economy Overview (Galaxy Map)"%_t, rtext = "Yes"%_t, icon = "data/textures/icons/histogram.png"})
+            else
+                table.insert(bonuses, {ltext = "Economy Overview (local)"%_t, rtext = "Yes"%_t, icon = "data/textures/icons/histogram.png"})
+            end
+
+            table.insert(bonuses, {ltext = "Economy Scan Range"%_t, rtext = tostring(economyRange), icon = "data/textures/icons/histogram.png"})
+        end
+    end
+
     if tradeBeaconRange > 0 then
         table.insert(lines, {ltext = "Trade Beacon Range"%_t, rtext = tostring(tradeBeaconRange), icon = "data/textures/icons/sell.png"})
     end
 
-    return lines
+    if not permanent and #bonuses == 0 then bonuses = nil end
+
+    return lines, bonuses
 end
 
 function getDescriptionLines(seed, rarity, permanent)
-    local lines =
-    {
-        {ltext = "View trading offers of stations in sector"%_t}
-    }
+    local lines = {}
+
+    local economyRange = getEconomyRange(seed, rarity, true)
+    if economyRange > 0 then
+        if economyRange == 1 then
+            table.insert(lines, {ltext = "Shows supply & demand of current sector"%_t})
+        else
+            table.insert(lines, {ltext = "Shows supply & demand of nearby sectors"%_t})
+        end
+    end
 
     local tradeBeaconRange = getTradeBeaconScanRange(seed, rarity)
     if tradeBeaconRange > 0 then
         table.insert(lines, {ltext = plural_t("Display trade routes in current sector", "Display trade routes in sectors with beacons within ${i} range", tradeBeaconRange)})
     end
 
+    if seePrices(seed, rarity) or seePriceFactors(seed, rarity) then
+        table.insert(lines, {ltext = "Shows prices of all stations in sector"%_t})
+    else
+        table.insert(lines, {ltext = "Shows goods of all stations in sector"%_t})
+    end
+
     return lines
 end
-
 -- new functions
 
 function getTradeBeaconScanRange(seed, rarity)

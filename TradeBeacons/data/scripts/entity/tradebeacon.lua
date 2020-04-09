@@ -88,7 +88,7 @@ function TradeBeacon.registerWithPlayer()
     local tradeData = TradeBeacon.getTradeData()
     local script = "tradebeacon.lua"
     for _, player in pairs(TradeBeacon.getPlayersToNotify()) do
-        player:invokeFunction(script, "registerTradeBeacon", x, y, entityId, tradeData, burnOutTime)
+        invokeFactionFunction(player.index, true, script, "registerTradeBeacon", x, y, entityId, tradeData, burnOutTime)
     end
     didSendInfoOnce = true
 end
@@ -97,7 +97,7 @@ function TradeBeacon.unregisterWithPlayer()
     local entityId = Entity().index.string
     local script = "tradebeacon.lua"
     for _, player in pairs(TradeBeacon.getPlayersToNotify()) do
-        player:invokeFunction(script, "deregisterTradeBeacon", entityId)
+        invokeFactionFunction(player.index, true, script, "deregisterTradeBeacon", entityId)
     end
 end
 
