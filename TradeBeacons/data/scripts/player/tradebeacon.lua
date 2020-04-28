@@ -120,7 +120,7 @@ if onClient() then
                 local renderer = UIRenderer()
                 local map = GalaxyMap()
                 local centerX, centerY = player:getShipPosition(craft.name)
-                local color = ColorInt(0x44FF9999)
+                local color = ColorARGB(0.5, 1, 1, 0)
                 TradeBeacon.renderRange(map, renderer, beaconScanRange, centerX, centerY, color)
                 TradeBeacon.renderConnections(map, renderer, beaconScanRange, centerX, centerY, color)
                 renderer:display()

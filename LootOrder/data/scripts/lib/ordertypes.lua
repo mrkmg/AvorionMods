@@ -4,6 +4,6 @@
 
 registerModdedOrderType("Loot", {
     name = "Loot"%_T,
-    icon = "data/textures/icons/loot.png",
+    icon = "data/textures/icons/cash.png",
     pixelIcon = "data/textures/icons/pixel/loot.png",
 })

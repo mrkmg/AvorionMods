@@ -173,9 +173,7 @@ function refreshRoutesUI()
 
             local profit, prefix = getReadableNumber(routeProfit(route))
             local margin = math.floor(((route.sellable.price - route.buyable.price) / route.buyable.price) * 10000) / 100
-            local maxPurchase = math.floor(math.min(route.buyable.stock, route.sellable.maxStock - route.sellable.stock, cashOnHand / route.sellable.price))
-
-            print(margin)
+            local maxPurchase = math.floor(math.min(route.buyable.stock, route.sellable.maxStock - route.sellable.stock, cashOnHand / route.buyable.price))
 
             for j, offer in pairs({route.buyable, route.sellable}) do
                 routePriceLabels[index][j].caption = createMonetaryString(offer.price)

@@ -10,16 +10,84 @@ local lastBuyable = {}
 
 -- overrides
 
--- not needed anymore, as we no longer collect the sector data from jumps
-function collectSectorData() end
-function onSectorChanged() end
+function TradeBeacons_TradeMappingCompat_collectSectorData()
+    local sellable, buyable = gatherData()
+    -- don't run while the server is still starting up
+    if not Galaxy().sectorLoaded or not Galaxy():sectorLoaded(Sector():getCoordinates()) then return end
+    
+    local sellkeys, buykeys = {}, {} -- indices for sorting the goods
+    local selling,  buying  = {}, {}
+
+    local coords = vec2(Sector():getCoordinates())
+    
+    for i, good in pairs(buyable) do
+        -- good.good.price holds the base price
+        local g = good.good.name
+        local gdn = good.good:displayName(2)
+        local data = selling[g]
+        
+        if (not data) then
+            sellkeys[#sellkeys + 1] = g
+            data = {
+                name = gdn,
+                stations = 0,
+                avg_price = 0,
+                best_price = 99999999,
+            }
+        end
+        
+        local avg = data.avg_price * data.stations
+        data.stations = data.stations + 1
+        data.avg_price = (avg + good.price) / data.stations
+        data.best_price = math.min(good.price, data.best_price)
+        selling[g] = data
+    end
+    
+    for i, good in pairs(sellable) do
+        local g = good.good.name
+        local gdn = good.good:displayName(2)
+        local data = buying[g]
+        
+        if (not data) then
+            buykeys[#buykeys + 1] = g
+            data = {
+                name = gdn,
+                stations = 0,
+                avg_price = 0,
+                best_price = 0,
+            }
+        end
+        
+        local avg = data.avg_price * data.stations
+        data.stations = data.stations + 1
+        data.avg_price = (avg + good.price) / data.stations
+        data.best_price = math.max(good.price, data.best_price)
+        buying[g] = data
+    end
+    
+    local goods_data = {
+        entity  = Entity().name, -- name of the ship which collected the data
+        sector  = coords, -- sector where it collected the data
+        buying  = buying,
+        selling = selling,
+    }
+    
+    invokeFactionFunction(Player(callingPlayer).index, true, "data/scripts/player/trade_mapping.lua", "setData", goods_data)
+end
+
+function collectSectorData()
+    local TradeMappingMod = ModManager():findEnabled("2063603296")
+    if TradeMappingMod then TradeBeacons_TradeMappingCompat_collectSectorData() return end
+end
 
 function onInstalled(seed, rarity, permanent)
     historySize = getTradeBeaconScanRange(seed, rarity)
+    economyRange = getEconomyRange(seed, rarity, permanent)
     Entity():setValue("beaconScanRange", historySize)
 
     if onServer() then
         tradingData = SimpleBuffer()
+        collectSectorData()
     end
 end
 
@@ -142,18 +210,16 @@ end
 -- new functions
 
 function getTradeBeaconScanRange(seed, rarity)
-    if rarity.value == 2 then
-        return 10
-    elseif rarity.value >= 3 then
-        math.randomseed(seed)
+    math.randomseed(seed)
 
-        if rarity.value == 5 then
-            return getInt(61, 80)
-        elseif rarity.value == 4 then
-            return getInt(41, 60)
-        elseif rarity.value == 3 then
-            return getInt(21, 40)
-        end
+    if rarity.value == 5 then
+        return getInt(61, 80)
+    elseif rarity.value == 4 then
+        return getInt(41, 60)
+    elseif rarity.value == 3 then
+        return getInt(21, 40)
+    elseif rarity.value == 2 then
+        return getInt(10, 20)
     end
 
     return 0

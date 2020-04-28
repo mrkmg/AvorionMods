@@ -81,7 +81,6 @@ function AILoot.hasCaptain()
 end
 
 function AILoot.updateServer(timeStep)
-    print("Running Loop updateServer")
     if not AILoot.hasCaptain() then
         ShipAI():setPassive()
         terminate()
@@ -241,8 +240,8 @@ function AILoot.getLootType(loot)
         lootType = ComponentType.CargoLoot
     elseif loot:hasComponent(ComponentType.MoneyLoot) then
         lootType = ComponentType.MoneyLoot
-    elseif loot:hasComponent(ComponentType.ColorLoot) then
-        lootType = ComponentType.ColorLoot
+    -- elseif loot:hasComponent(ComponentType.ColorLoot) then
+        -- lootType = ComponentType.ColorLoot
     elseif loot:hasComponent(ComponentType.ResourceLoot) then
         lootType = ComponentType.ResourceLoot
     elseif loot:hasComponent(ComponentType.CrewLoot) then

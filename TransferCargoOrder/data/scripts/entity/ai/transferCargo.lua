@@ -28,10 +28,6 @@ function TransferCargo.initialize(targetIndex)
     targetEntity = Entity(targetIndex)
     didInit = true
 
-    if not valid(targetEntity) then
-        terminate()
-    end
-
     TransferCargo.updateServer()
 end
 
@@ -173,6 +169,7 @@ function TransferCargo.updateServer(timeStep)
 
     if TransferCargo.checkQuitConditions() then
         terminate()
+        return
     end
 
     TransferCargo.setState()

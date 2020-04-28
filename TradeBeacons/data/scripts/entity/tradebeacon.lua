@@ -25,7 +25,7 @@ defineSyncFunction("data", TradeBeacon)
 
 function TradeBeacon.getUpdateInterval()
     if didSendInfoOnce then
-        return 120
+        return 5
     else
         return 1
     end
@@ -140,7 +140,7 @@ function TradeBeacon.updateServerCharged()
     TradeBeacon.registerWithPlayer()
 
     if traderAffinity ~= nil and traderAffinity > 0 and random():getFloat() < traderAffinity then
-        Sector():addScriptOnce("data/scripts/player/spawntravellingmerchant.lua")
+        Sector():addScriptOnce("data/scripts/player/events/spawntravellingmerchant.lua")
     end
 end
 
@@ -168,6 +168,7 @@ function TradeBeacon.updateClient(timeStep)
 end
 
 function TradeBeacon.secure()
+    TradeBeacon.updateServerCharged()
     return {
         burnOutTime = burnOutTime,
         didWarnOfBurnOut = didWarnOfBurnOut,

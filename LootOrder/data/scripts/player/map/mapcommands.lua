@@ -6,12 +6,12 @@ include ("ordertypes")
 
 MapCommands.registerModdedMapCommand(OrderType.Loot, {
     tooltip = "Loot",
-    icon = "data/textures/icons/loot.png",
+    icon = "data/textures/icons/cash.png",
     callback = "onLootPressed",
 })
 
-function MapCommands.onLootPressed() 
+function MapCommands.onLootPressed()
     MapCommands.clearOrdersIfNecessary()
     MapCommands.enqueueOrder("addLootOrder")
-    if not enqueueNextOrder then MapCommands.runOrders() end
+    if not MapCommands.isEnqueueing() then MapCommands.runOrders() end
 end

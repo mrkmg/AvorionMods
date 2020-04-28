@@ -10,6 +10,7 @@ function CraftOrders.registerModdedCraftOrder(id, orderDetails)
     end
 end
 
+-- TODO figure out how to inject into splitter
 function CraftOrders.initUI()    
     local numModdedCraftOrders = 0
     for _,_ in pairs(moddedCraftOrders) do
@@ -17,7 +18,7 @@ function CraftOrders.initUI()
     end
 
     local res = getResolution()
-    local size = vec2(250, 370 + (numModdedCraftOrders * 20))
+    local size = vec2(250, 450 + (numModdedCraftOrders * 20))
 
     local menu = ScriptUI()
     local window = menu:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5))
@@ -27,19 +28,21 @@ function CraftOrders.initUI()
     window.showCloseButton = 1
     window.moveable = 1
 
-    local splitter = UIHorizontalMultiSplitter(Rect(window.size), 10, 10, 8 + numModdedCraftOrders)
+    local splitter = UIHorizontalMultiSplitter(Rect(window.size), 10, 10, 10 + numModdedCraftOrders)
 
     window:createButton(splitter:partition(0), "Idle"%_t, "onUserIdleOrder")
     window:createButton(splitter:partition(1), "Passive"%_t, "onUserPassiveOrder")
     window:createButton(splitter:partition(2), "Guard This Position"%_t, "onUserGuardOrder")
     window:createButton(splitter:partition(3), "Patrol Sector"%_t, "onUserPatrolOrder")
     window:createButton(splitter:partition(4), "Escort Me"%_t, "onUserEscortMeOrder")
-    window:createButton(splitter:partition(5), "Attack Enemies"%_t, "onUserAttackEnemiesOrder")
-    window:createButton(splitter:partition(6), "Mine"%_t, "onUserMineOrder")
-    window:createButton(splitter:partition(7), "Salvage"%_t, "onUserSalvageOrder")
-    window:createButton(splitter:partition(8), "Refine Ores"%_t, "onUserRefineOresOrder")
-
-    local index = 9
+    window:createButton(splitter:partition(5), "Repair Me"%_t, "onUserRepairMeOrder")
+    window:createButton(splitter:partition(6), "Repair"%_t, "onUserRepairOrder")
+    window:createButton(splitter:partition(7), "Attack Enemies"%_t, "onUserAttackEnemiesOrder")
+    window:createButton(splitter:partition(8), "Mine"%_t, "onUserMineOrder")
+    window:createButton(splitter:partition(9), "Salvage"%_t, "onUserSalvageOrder")
+    window:createButton(splitter:partition(10), "Refine Ores"%_t, "onUserRefineOresOrder")
+    
+    local index = 11
 
     for _, craftOrder in pairs(moddedCraftOrders) do
         window:createButton(splitter:partition(index), craftOrder.title, craftOrder.callback)
