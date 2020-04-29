@@ -188,16 +188,25 @@ The following is an excerpt of code taking from the OrderBook mod. It produces t
 
 ```lua
 local pageSize = 10
+
+-- Create the root node
 local root = Node(400, 420)
-
+-- Pad the root node, for the window data
 local paddedRoot = root:pad(10)
+-- Create 3 sections, top being 60px, bottom being 35px
+-- and the middle taking the remaining space
 local top, middle, bottom = paddedRoot:rows({60, 1, 35}, 10)
+-- Convert top to a 2x2 grid with 5px margins
 top = {top:grid(2, 2, 5, 5)}
+-- Create a spot for the chainTable, and nav buttons in 
+-- the middle sections
 local chainTable, chainNextPrev = middle:rows({1, 25}, 10)
-chainTable = {chainTable:grid(10, {3/5, 2/25, 2/25, 2/25, 2/25, 2/25}, 5, 2)}
-chainNextPrev = {chainNextPrev:cols(2, 1/4)}
-bottom = {bottom:pad(0, 12, 0, 0):cols({1/4, 3/8, 3/8}, 10)}
+-- Convert the chainTable to a grid of pageSize rows, the
+-- first taking up 3/5's the space, and the rest splitting
+-- the remaining space. (2/5) / 5 = 2/25
+chainTable = {chainTable:grid(pageSize, {3/5, 2/25, 2/25, 2/25, 2/25, 2/25}, 5, 2)}
 
+-- Create the elements of the window
 local windowRect = root:offset(res.x - root.rect.width - 5, res.y / 2 + root.rect.height / 2).rect
 mainWindow = galaxy:createWindow(windowRect)
 readComboBox = mainWindow:createValueComboBox(top[1][1].rect, "loadGo")
@@ -210,13 +219,16 @@ syncCheckbox = mainWindow:createCheckBox(bottom[1].rect, "Sync", "syncChanged")
 loadOrdersButton = mainWindow:createButton(bottom[2].rect, "Load Orders", "loadFromSelected")
 applyOrdersButton = mainWindow:createButton(bottom[3].rect, "Replace Orders", "applyOrders")
 
+-- Tweak elements
 writeTextBox.forbiddenCharacters = "%+/#$@?{}[]><()"
 mainWindow.caption = "Order Chain Book Reader/Writer /* Order Window Caption Galaxy Map */"%_t
 mainWindow.showCloseButton = 1
 mainWindow.moveable = 1
 mainWindow.closeableWithEscape = 1
 
+-- foreach row
 for i = 1,pageSize do
+    -- Create the elements for the table row
     local lab = mainWindow:createLabel(chainTable[i][1].rect, "", 14)
     local rj = mainWindow:createCheckBox(chainTable[i][2].rect, "", "chainRelativeJumpChanged")
     local upBut = mainWindow:createButton(chainTable[i][3].rect, "", "chainMoveUpGo")
@@ -224,6 +236,7 @@ for i = 1,pageSize do
     local editBut = mainWindow:createButton(chainTable[i][5].rect, "", "chainEditShow")
     local delBut = mainWindow:createButton(chainTable[i][6].rect, "", "chainDeleteGo")
 
+    -- Adjust the elements, add pictures, etc.
     lab:setLeftAligned()
     rj.tooltip = "Relative Jump"
     upBut.icon = "data/textures/icons/arrow-up.png"
@@ -235,6 +248,7 @@ for i = 1,pageSize do
     delBut.icon = "data/textures/icons/trash-can.png"
     delBut.tooltip = "Delete"
 
+    -- Save to a global to use later
     chainRowItems[i] = {
         label = lab,
         relativeJumpCheckbox = rj,
