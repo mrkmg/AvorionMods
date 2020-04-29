@@ -88,7 +88,7 @@ if onClient() then -- START CLIENT
         chainNextPrev = {chainNextPrev:cols(2, 1/4)}
         bottom = {bottom:pad(0, 12, 0, 0):cols({1/4, 3/8, 3/8}, 10)}
 
-        local windowRect = root:offset(res.x - root.rect.width - 5, res.y / 2 + root.rect.height / 2).rect
+        local windowRect = root:offset(res.x - root.rect.width - 5, res.y / 2 - root.rect.height / 2).rect
         mainWindow = galaxy:createWindow(windowRect)
         readComboBox = mainWindow:createValueComboBox(top[1][1].rect, "loadGo")
         writeTextBox = mainWindow:createTextBox(top[1][2].rect, "renderMainWindow")
@@ -139,11 +139,12 @@ if onClient() then -- START CLIENT
     end
 
     function OrderBook.createdEditWindow(galaxy, res)
-        local size = vec2(400, 300)
-        local warningLabelNode, editBoxNode, bottomButtons = Node(size.x, size.y):pad(5):rows({30, 1, 30}, 5)
+        local root = Node(400, 300)
+        local warningLabelNode, editBoxNode, bottomButtons = root:pad(5):rows({30, 1, 30}, 5)
         local leftBut, rightBut = bottomButtons:cols(2, 10)
 
-        editCommandWindow = galaxy:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5))
+        local windowRect = root:offset(res.x / 2 - root.rect.width / 2, res.y / 2 - root.rect.height / 2).rect
+        editCommandWindow = galaxy:createWindow(windowRect)
         local warningLabel = editCommandWindow:createLabel(warningLabelNode.rect, "Only the most experienced, or daring, pilots should edit their own orders.", 14)
         editCommandTextBox = editCommandWindow:createMultiLineTextBox(editBoxNode.rect)
         editCommandWindow:createButton(leftBut.rect, "Cancel", "cancelEditCommand")
@@ -530,12 +531,6 @@ if onClient() then -- START CLIENT
 
             applyOrdersButton:show()
             loadOrdersButton:show()
-
-            if #MapCommands.getSelectedPortraits() == 1 then
-                syncCheckbox:show()
-            else
-                syncCheckbox:hide()
-            end
         else
             applyOrdersButton:hide()
             loadOrdersButton:hide()

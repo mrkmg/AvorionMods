@@ -91,7 +91,7 @@ A `Node` has the following properties:
 `offset` returns a new node which has been shifted by the provided sizes.
 
 Signature:
-- **Node:pad**(x: *size*, y: *size*) : *Node*
+- **Node:offset**(x: *size*, y: *size*) : *Node*
 
 ```lua
 -- node is from 10,10 to 20,20
