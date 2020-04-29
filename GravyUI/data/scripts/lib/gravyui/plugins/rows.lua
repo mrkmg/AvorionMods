@@ -1,6 +1,6 @@
 return function(node, splits, margin)
     margin = margin or 0
-    if margin <= 1 then margin = round(margin * node.rect.height) end 
+    if math.abs(margin) <= 1 then margin = round(margin * node.rect.height) end 
     local numSplits
     if type(splits) == "number" then
         numSplits = splits
@@ -11,7 +11,7 @@ return function(node, splits, margin)
     end
     local availableSize = node.rect.height - margin * (numSplits - 1)
     for i = 1,numSplits do
-        if splits[i] > 1 then
+        if math.abs(splits[i]) > 1 then
             availableSize = availableSize - splits[i]
         end
     end
@@ -19,7 +19,7 @@ return function(node, splits, margin)
     local offset = 0
     for i = 1,numSplits do
         local split = splits[i]
-        if split <= 1 then
+        if math.abs(split) <= 1 then
             split = round(split * availableSize)
         end
         local topLeft = node.rect.topLeft + vec2(0, (i - 1) * margin + offset)

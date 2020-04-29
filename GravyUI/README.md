@@ -6,6 +6,7 @@ GravyUI is a simple, yet powerful library to generate `Rect`'s in Avorion for us
 - [GravyUI](#gravyui)
 - [Premise](#premise)
 - [Quick Example](#quick-example)
+- [Helper](#helper)
 - [How to Use](#how-to-use)
   - [API](#api)
     - [offset](#offset)
@@ -20,6 +21,7 @@ GravyUI is a simple, yet powerful library to generate `Rect`'s in Avorion for us
 # Premise
 
 All functions of GravyUI stem from Node. A Node wraps a Rect, and adds methods to generate new nodes. You can add a padding, or split a node into smaller pieces and build an entire layout.
+
 
 # Quick Example
 
@@ -36,6 +38,12 @@ mapWindow:createLabel(titleNode.rect, "Title Area")
 mapWindow:createLabel(bodyNodeCols[1].rect, "Left Body")
 mapWindow:createLabel(bodyNodeCols[2].rect, "Right Body)
 ```
+
+# Helper
+
+Following along with the examples, and test yourself using the [GravyUI-WebHelper](https://mrkmg.github.io/Avorion-GravyUI-WebHelper/).
+
+The helper is an interactive tool to help you visualize your layouts, while you create them!
 
 # How to Use
 
@@ -205,6 +213,12 @@ local chainTable, chainNextPrev = middle:rows({1, 25}, 10)
 -- first taking up 3/5's the space, and the rest splitting
 -- the remaining space. (2/5) / 5 = 2/25
 chainTable = {chainTable:grid(pageSize, {3/5, 2/25, 2/25, 2/25, 2/25, 2/25}, 5, 2)}
+-- Convert the chainNextPrev into two even columns with
+-- 1/4 the width of the entire element as padding
+chainNextPrev = {chainNextPrev:cols(2, 1/4)}
+-- Pad 12 on top, then convert the bottom into three columns with
+-- 10 px margin
+bottom = {bottom:pad(0, 12, 0, 0):cols({1/4, 3/8, 3/8}, 10)}
 
 -- Create the elements of the window
 local windowRect = root:offset(res.x - root.rect.width - 5, res.y / 2 + root.rect.height / 2).rect
