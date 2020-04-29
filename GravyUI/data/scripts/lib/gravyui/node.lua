@@ -27,6 +27,7 @@ GravyUINode.rows = include("gravyui/plugins/rows")
 GravyUINode.cols = include("gravyui/plugins/cols")
 GravyUINode.pad = include("gravyui/plugins/pad")
 GravyUINode.grid = include("gravyui/plugins/grid")
+GravyUINode.offset = include("gravyui/plugins/offset")
 
 --[[
     (width: number, height: number)

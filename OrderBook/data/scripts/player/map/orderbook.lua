@@ -41,6 +41,8 @@ if onClient() then -- START CLIENT
     local applyOrdersButton
     ----@type Button
     local loadOrdersButton
+    ----@type Button
+    local deleteButton
 
     local chainEditIndex
     local syncIgnoreNext = false
@@ -52,63 +54,50 @@ if onClient() then -- START CLIENT
     local rowSize = 30
     local pageSize = 10
 
-    function printRect(name, rect)
-        print(name .. " | " .. rect.width .. "," .. rect.height ..  " | " .. rect.topLeft.x .. "," .. rect.topLeft.y .. " -> " .. rect.bottomRight.x .. "," .. rect.bottomRight.y)
-      end      
-
-
     function OrderBook.initialize()
         OrderBook.initUI()
         Player():registerCallback("onShipOrderInfoUpdated", "syncLoad")
     end
-
-    function OrderBook.getMainLayout(width, height)
-        local root = Node(width, height):pad(10)
-        local top, middle, bottom = root:rows({60, 1, 35}, 10)
-
-        -- top
-        top = {top:grid(2, 2, 5, 5)}
-
-        -- middle
-        local chainTable, chainNextPrev = middle:rows({1, 25}, 10)
-        chainTable = {chainTable:grid(10, {3/5, 2/25, 2/25, 2/25, 2/25, 2/25}, 5, 2)}
-        chainNextPrev = {chainNextPrev:cols({1/2, 1/2}, 1/4)}
-
-        -- bottom
-        bottom = {bottom:pad(10, 0, 0, 0):cols({1/4, 3/8, 3/8}, 10)}
-
-        return {
-            top = top,
-            chainTable = chainTable,
-            chainNextPrev = chainNextPrev,
-            bottom = bottom
-        }
-    end
     
-
     function OrderBook.initUI()
         local galaxy = GalaxyMap()
         local res = getResolution()
 
+        OrderBook.createGalaxyMapButton(galaxy, res)
+        OrderBook.createMainWindow(galaxy, res)
+        OrderBook.createdEditWindow(galaxy, res)
+
+        OrderBook.syncGet()
+    end
+
+    function OrderBook.createGalaxyMapButton(galaxy, res)
         local buttonContainer = galaxy:createContainer()
         openWindowButton = buttonContainer:createButton(Rect(res.x - 50, res.y - 50, res.x, res.y), "", "openMainWindow")
         openWindowButton.icon = "data/textures/icons/open-book.png"
         openWindowButton.tooltip = "Open Order Book"
+    end
 
-        -- Main Window
+    function OrderBook.createMainWindow(galaxy, res)
         local size = vec2(400, 420)
-        local mainLayout = OrderBook.getMainLayout(size.x, size.y)
+
+        local root = Node(size.x, size.y):pad(10)
+        local top, middle, bottom = root:rows({60, 1, 35}, 10)
+        top = {top:grid(2, 2, 5, 5)}
+        local chainTable, chainNextPrev = middle:rows({1, 25}, 10)
+        chainTable = {chainTable:grid(10, {3/5, 2/25, 2/25, 2/25, 2/25, 2/25}, 5, 2)}
+        chainNextPrev = {chainNextPrev:cols(2, 1/4)}
+        bottom = {bottom:pad(0, 12, 0, 0):cols({1/4, 3/8, 3/8}, 10)}
 
         mainWindow = galaxy:createWindow(Rect(res.x - size.x - 5, res.y/2 - size.y/2, res.x - 5, res.y/2 + size.y/2))
-        readComboBox = mainWindow:createValueComboBox(mainLayout.top[1][1].rect, "loadGo")
-        writeTextBox = mainWindow:createTextBox(mainLayout.top[1][2].rect, "renderMainWindow")
-        mainWindow:createButton(mainLayout.top[2][1].rect, "Delete Book", "deleteGo")
-        writeButton = mainWindow:createButton(mainLayout.top[2][2].rect, "Write Book", "writeGo")
-        chainPreviousPageButton = mainWindow:createButton(mainLayout.chainNextPrev[1].rect, "Previous Page", "writePageBack")
-        chainNextPageButton = mainWindow:createButton(mainLayout.chainNextPrev[2].rect, "Next Page", "writePageNext")
-        syncCheckbox = mainWindow:createCheckBox(mainLayout.bottom[1].rect, "Sync", "syncChanged")
-        loadOrdersButton = mainWindow:createButton(mainLayout.bottom[2].rect, "Load Orders", "loadFromSelected")
-        applyOrdersButton = mainWindow:createButton(mainLayout.bottom[3].rect, "Replace Orders", "applyOrders")
+        readComboBox = mainWindow:createValueComboBox(top[1][1].rect, "loadGo")
+        writeTextBox = mainWindow:createTextBox(top[1][2].rect, "renderMainWindow")
+        deleteButton = mainWindow:createButton(top[2][1].rect, "Delete Book", "deleteGo")
+        writeButton = mainWindow:createButton(top[2][2].rect, "Write Book", "writeGo")
+        chainPreviousPageButton = mainWindow:createButton(chainNextPrev[1].rect, "Previous Page", "writePageBack")
+        chainNextPageButton = mainWindow:createButton(chainNextPrev[2].rect, "Next Page", "writePageNext")
+        syncCheckbox = mainWindow:createCheckBox(bottom[1].rect, "Sync", "syncChanged")
+        loadOrdersButton = mainWindow:createButton(bottom[2].rect, "Load Orders", "loadFromSelected")
+        applyOrdersButton = mainWindow:createButton(bottom[3].rect, "Replace Orders", "applyOrders")
 
         writeTextBox.forbiddenCharacters = "%+/#$@?{}[]><()"
         mainWindow.caption = "Order Chain Book Reader/Writer /* Order Window Caption Galaxy Map */"%_t
@@ -117,12 +106,12 @@ if onClient() then -- START CLIENT
         mainWindow.closeableWithEscape = 1
 
         for i = 1,pageSize do
-            local lab = mainWindow:createLabel(mainLayout.chainTable[i][1].rect, "", 14)
-            local rj = mainWindow:createCheckBox(mainLayout.chainTable[i][2].rect, "", "chainRelativeJumpChanged")
-            local upBut = mainWindow:createButton(mainLayout.chainTable[i][3].rect, "", "chainMoveUpGo")
-            local downBut = mainWindow:createButton(mainLayout.chainTable[i][4].rect, "", "chainMoveDownGo")
-            local editBut = mainWindow:createButton(mainLayout.chainTable[i][5].rect, "", "chainEditShow")
-            local delBut = mainWindow:createButton(mainLayout.chainTable[i][6].rect, "", "chainDeleteGo")
+            local lab = mainWindow:createLabel(chainTable[i][1].rect, "", 14)
+            local rj = mainWindow:createCheckBox(chainTable[i][2].rect, "", "chainRelativeJumpChanged")
+            local upBut = mainWindow:createButton(chainTable[i][3].rect, "", "chainMoveUpGo")
+            local downBut = mainWindow:createButton(chainTable[i][4].rect, "", "chainMoveDownGo")
+            local editBut = mainWindow:createButton(chainTable[i][5].rect, "", "chainEditShow")
+            local delBut = mainWindow:createButton(chainTable[i][6].rect, "", "chainDeleteGo")
 
             lab:setLeftAligned()
             rj.tooltip = "Relative Jump"
@@ -144,25 +133,25 @@ if onClient() then -- START CLIENT
                 deleteButton = delBut
             }
         end
-
+        
         mainWindow:hide()
+    end
 
-        -- Edit Window
+    function OrderBook.createdEditWindow(galaxy, res)
         local size = vec2(400, 300)
         local warningLabelNode, editBoxNode, bottomButtons = Node(size.x, size.y):pad(5):rows({30, 1, 30}, 5)
         local leftBut, rightBut = bottomButtons:cols(2, 10)
-        
+
         editCommandWindow = galaxy:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5))
         local warningLabel = editCommandWindow:createLabel(warningLabelNode.rect, "Only the most experienced, or daring, pilots should edit their own orders.", 14)
-        warningLabel:setCenterAligned()
-        warningLabel.color = ColorRGB(1, 0, 0)
         editCommandTextBox = editCommandWindow:createMultiLineTextBox(editBoxNode.rect)
         editCommandWindow:createButton(leftBut.rect, "Cancel", "cancelEditCommand")
         editCommandWindow:createButton(rightBut.rect, "Done", "finishEditCommand")
-        
-        editCommandWindow:hide()
 
-        OrderBook.syncGet()
+        warningLabel:setCenterAligned()
+        warningLabel.color = ColorRGB(1, 0, 0)
+
+        editCommandWindow:hide()
     end
 
     function OrderBook.hideOrderButtons()
@@ -501,10 +490,12 @@ if onClient() then -- START CLIENT
         readComboBox:clear()
         local loadedIndex = 0
         readComboBox:addEntry("", "")
+        deleteButton:hide()
         for index,savedChain in pairs(savedChains) do
             readComboBox:addEntry(savedChain.name, savedChain.name)
             if tablesEqual(loadedChain, savedChain.chain) then
                 loadedIndex = index
+                deleteButton:show()
             end
         end
         readComboBox:setSelectedIndexNoCallback(loadedIndex)
