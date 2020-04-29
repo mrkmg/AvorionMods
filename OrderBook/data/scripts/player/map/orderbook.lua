@@ -78,17 +78,18 @@ if onClient() then -- START CLIENT
     end
 
     function OrderBook.createMainWindow(galaxy, res)
-        local size = vec2(400, 420)
+        local root = Node(400, 420)
 
-        local root = Node(size.x, size.y):pad(10)
-        local top, middle, bottom = root:rows({60, 1, 35}, 10)
+        local paddedRoot = root:pad(10)
+        local top, middle, bottom = paddedRoot:rows({60, 1, 35}, 10)
         top = {top:grid(2, 2, 5, 5)}
         local chainTable, chainNextPrev = middle:rows({1, 25}, 10)
         chainTable = {chainTable:grid(10, {3/5, 2/25, 2/25, 2/25, 2/25, 2/25}, 5, 2)}
         chainNextPrev = {chainNextPrev:cols(2, 1/4)}
         bottom = {bottom:pad(0, 12, 0, 0):cols({1/4, 3/8, 3/8}, 10)}
 
-        mainWindow = galaxy:createWindow(Rect(res.x - size.x - 5, res.y/2 - size.y/2, res.x - 5, res.y/2 + size.y/2))
+        local windowRect = root:offset(res.x - root.rect.width - 5, res.y / 2 + root.rect.height / 2).rect
+        mainWindow = galaxy:createWindow(windowRect)
         readComboBox = mainWindow:createValueComboBox(top[1][1].rect, "loadGo")
         writeTextBox = mainWindow:createTextBox(top[1][2].rect, "renderMainWindow")
         deleteButton = mainWindow:createButton(top[2][1].rect, "Delete Book", "deleteGo")

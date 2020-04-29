@@ -88,7 +88,10 @@ A `Node` has the following properties:
 
 ### offset
 
-`offset` returns a new node which has been shifted by the provided `vec2`.
+`offset` returns a new node which has been shifted by the provided sizes.
+
+Signature:
+- **Node:pad**(x: *size*, y: *size*) : *Node*
 
 ```lua
 -- node is from 10,10 to 20,20
@@ -184,31 +187,19 @@ The following is an excerpt of code taking from the OrderBook mod. It produces t
 ![Example of Complex GravyUI](https://raw.githubusercontent.com/mrkmg/AvorionMods/master/GravyUI/example.png)
 
 ```lua
-local size = vec2(400, 420)
+local pageSize = 10
+local root = Node(400, 420)
 
--- Create the root node, padded in 10 on all sides
-local root = Node(size.x, size.y):pad(10)
--- Create 3 sections, top being 60px, bottom being 35px
--- and the middle taking the remaining space
-local top, middle, bottom = root:rows({60, 1, 35}, 10)
--- Convert top to a 2x2 grid with 5px margins
+local paddedRoot = root:pad(10)
+local top, middle, bottom = paddedRoot:rows({60, 1, 35}, 10)
 top = {top:grid(2, 2, 5, 5)}
--- Create a spot for the chainTable, and nav buttons in 
--- the middle sections
 local chainTable, chainNextPrev = middle:rows({1, 25}, 10)
--- Convert the chainTable to a grid of pageSize rows, the
--- first taking up 3/5's the space, and the rest splitting
--- the reamaining space. (2/5) / 5 = 2/25
-chainTable = {chainTable:grid(pageSize, {3/5, 2/25, 2/25, 2/25, 2/25, 2/25}, 5, 2)}
--- Convert the chainNext to two even cols, with a 1/4 of
--- of the row's size as a margin
+chainTable = {chainTable:grid(10, {3/5, 2/25, 2/25, 2/25, 2/25, 2/25}, 5, 2)}
 chainNextPrev = {chainNextPrev:cols(2, 1/4)}
--- Convert the bottom into 3 columns for the sync checkbox
--- and load/apply buttons
-bottom = {bottom:pad(0, 10, 0, 0):cols({1/4, 3/8, 3/8}, 10)}
+bottom = {bottom:pad(0, 12, 0, 0):cols({1/4, 3/8, 3/8}, 10)}
 
--- Create all the static UIElements
-mainWindow = galaxy:createWindow(Rect(res.x - size.x - 5, res.y/2 - size.y/2, res.x - 5, res.y/2 + size.y/2))
+local windowRect = root:offset(res.x - root.rect.width - 5, res.y / 2 + root.rect.height / 2).rect
+mainWindow = galaxy:createWindow(windowRect)
 readComboBox = mainWindow:createValueComboBox(top[1][1].rect, "loadGo")
 writeTextBox = mainWindow:createTextBox(top[1][2].rect, "renderMainWindow")
 deleteButton = mainWindow:createButton(top[2][1].rect, "Delete Book", "deleteGo")
@@ -219,7 +210,6 @@ syncCheckbox = mainWindow:createCheckBox(bottom[1].rect, "Sync", "syncChanged")
 loadOrdersButton = mainWindow:createButton(bottom[2].rect, "Load Orders", "loadFromSelected")
 applyOrdersButton = mainWindow:createButton(bottom[3].rect, "Replace Orders", "applyOrders")
 
--- Make some tweaks
 writeTextBox.forbiddenCharacters = "%+/#$@?{}[]><()"
 mainWindow.caption = "Order Chain Book Reader/Writer /* Order Window Caption Galaxy Map */"%_t
 mainWindow.showCloseButton = 1
@@ -227,8 +217,6 @@ mainWindow.moveable = 1
 mainWindow.closeableWithEscape = 1
 
 for i = 1,pageSize do
-
-    -- Create the elements for the table rows
     local lab = mainWindow:createLabel(chainTable[i][1].rect, "", 14)
     local rj = mainWindow:createCheckBox(chainTable[i][2].rect, "", "chainRelativeJumpChanged")
     local upBut = mainWindow:createButton(chainTable[i][3].rect, "", "chainMoveUpGo")
@@ -236,7 +224,6 @@ for i = 1,pageSize do
     local editBut = mainWindow:createButton(chainTable[i][5].rect, "", "chainEditShow")
     local delBut = mainWindow:createButton(chainTable[i][6].rect, "", "chainDeleteGo")
 
-    -- Adjust the elements, add pictures, etc.
     lab:setLeftAligned()
     rj.tooltip = "Relative Jump"
     upBut.icon = "data/textures/icons/arrow-up.png"
@@ -248,7 +235,6 @@ for i = 1,pageSize do
     delBut.icon = "data/textures/icons/trash-can.png"
     delBut.tooltip = "Delete"
 
-    -- Save to a global to use later
     chainRowItems[i] = {
         label = lab,
         relativeJumpCheckbox = rj,
@@ -258,6 +244,8 @@ for i = 1,pageSize do
         deleteButton = delBut
     }
 end
+
+mainWindow:hide()
 ```
 
 # Create Plugins to GravyUI
