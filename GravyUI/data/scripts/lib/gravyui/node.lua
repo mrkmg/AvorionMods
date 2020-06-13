@@ -34,7 +34,7 @@ GravyUINode.offset = include("gravyui/plugins/offset")
     (box: Rect)
 ]]
 local call = function(_, a, b)
-    if b ~= nil then
+    if b == nil then
         a = Rect(vec2(0, 0), vec2(a, b))
     end
     return GravyUINode:new(a)
